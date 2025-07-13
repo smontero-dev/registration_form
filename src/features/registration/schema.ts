@@ -73,18 +73,24 @@ export const registrationSchema = z.object({
     .optional(),
   additionalInfo: z.string().optional(),
   isNewStudent: z.boolean().optional(),
-  morningLocation: z
+  location: z
     .object({
-      lat: z.number(),
-      lng: z.number(),
+      morning: z
+        .object({
+          lat: z.number(),
+          lng: z.number(),
+        })
+        .optional(),
+      afternoon: z
+        .object({
+          lat: z.number(),
+          lng: z.number(),
+        })
+        .optional(),
     })
-    .optional(),
-  afternoonLocation: z
-    .object({
-      lat: z.number(),
-      lng: z.number(),
-    })
-    .optional(),
+    .refine((data) => data.morning || data.afternoon, {
+      message: "Debe seleccionar al menos una ubicación.",
+    }),
 
   billingInfo: z.object({
     name: z.string().nonempty("Este es un campo requerido."),
