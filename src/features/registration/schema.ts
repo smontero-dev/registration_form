@@ -89,7 +89,7 @@ export const registrationSchema = z.object({
         .optional(),
     })
     .refine((data) => data.morning || data.afternoon, {
-      message: "Debe seleccionar al menos una ubicación.",
+      message: "Debe seleccionar al menos una ubicación (Mañana o Tarde).",
     }),
 
   billingInfo: z.object({

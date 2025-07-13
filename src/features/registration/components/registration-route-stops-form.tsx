@@ -6,7 +6,7 @@ import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegistrationStore } from "@/app/registration/store";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Markers } from "@/types";
 
@@ -57,81 +57,79 @@ export default function RegistrationRouteStopsForm() {
 
   const location = watch("location");
 
-  const { setData, ...storedData } = useRegistrationStore((state) => state);
+  const { setData } = useRegistrationStore();
 
-  // useEffect(() => {
-  //   if (!useRegistrationStore.persist.hasHydrated) return;
+  const loadData = useCallback(() => {
+    const storedData = useRegistrationStore.getState();
+    if (storedData.location) {
+      const formFields = Object.keys(
+        registrationRouteStopsSchema.shape
+      ) as (keyof RegistrationRouteStopsSchema)[];
 
-  //   const formFields = Object.keys(
-  //     registrationRouteStopsSchema.shape
-  //   ) as (keyof RegistrationRouteStopsSchema)[];
-
-  //   formFields.forEach((field) => {
-  //     const value = storedData[field];
-  //     if (value !== undefined) {
-  //       setValue(field, value);
-  //     }
-  //   });
-  // }, [storedData, setValue]);
+      formFields.forEach((field) => {
+        const value = storedData[field];
+        if (value !== undefined) {
+          setValue(field, value);
+          let storedMarkers: Markers;
+          if (
+            value.morning !== undefined &&
+            value.afternoon !== undefined &&
+            value.morning.lat === value.afternoon.lat &&
+            value.morning.lng === value.afternoon.lng
+          ) {
+            setUseSameLocation(true);
+            storedMarkers = {
+              morning: {
+                latlng: value.morning,
+                color: "#FFC107",
+                popupContent: "Parada de la Mañana",
+              },
+              afternoon: {
+                latlng: value.afternoon,
+                color: "#3B82F6",
+                popupContent: "Parada de la Tarde",
+              },
+              common: {
+                latlng: value.morning,
+                color: "#8B5CF6",
+                popupContent: "Parada de la Mañana y Tarde",
+              },
+            };
+          } else {
+            storedMarkers = {
+              morning: value.morning
+                ? {
+                    latlng: value.morning,
+                    color: "#FFC107",
+                    popupContent: "Parada de la Mañana",
+                  }
+                : null,
+              afternoon: value.afternoon
+                ? {
+                    latlng: value.afternoon,
+                    color: "#3B82F6",
+                    popupContent: "Parada de la Tarde",
+                  }
+                : null,
+              common: null,
+            };
+          }
+          setMarkers(storedMarkers);
+        }
+      });
+    }
+  }, [setValue]);
 
   useEffect(() => {
-    if (!useRegistrationStore.persist.hasHydrated) return;
+    if (!useRegistrationStore.persist.hasHydrated()) {
+      useRegistrationStore.persist.onFinishHydration(() => {
+        loadData();
+        return;
+      });
+    }
 
-    const formFields = Object.keys(
-      registrationRouteStopsSchema.shape
-    ) as (keyof RegistrationRouteStopsSchema)[];
-
-    formFields.forEach((field) => {
-      const value = storedData[field];
-      if (value !== undefined) {
-        let storedMarkers: Markers;
-        if (
-          value.morning !== undefined &&
-          value.afternoon !== undefined &&
-          value.morning.lat === value.afternoon.lat &&
-          value.morning.lng === value.afternoon.lng
-        ) {
-          setUseSameLocation(true);
-          storedMarkers = {
-            morning: {
-              latlng: value.morning,
-              color: "#FFC107",
-              popupContent: "Parada de la Mañana",
-            },
-            afternoon: {
-              latlng: value.afternoon,
-              color: "#3B82F6",
-              popupContent: "Parada de la Tarde",
-            },
-            common: {
-              latlng: value.morning,
-              color: "#8B5CF6",
-              popupContent: "Parada de la Mañana y Tarde",
-            },
-          };
-        } else {
-          storedMarkers = {
-            morning: value.morning
-              ? {
-                  latlng: value.morning,
-                  color: "#FFC107",
-                  popupContent: "Parada de la Mañana",
-                }
-              : null,
-            afternoon: value.afternoon
-              ? {
-                  latlng: value.afternoon,
-                  color: "#3B82F6",
-                  popupContent: "Parada de la Tarde",
-                }
-              : null,
-            common: null,
-          };
-        }
-        setMarkers(storedMarkers);
-      }
-    });
-  }, [storedData]);
+    loadData();
+  }, [loadData]);
 
   useEffect(() => {
     if (useSameLocation) {
@@ -175,8 +173,7 @@ export default function RegistrationRouteStopsForm() {
 
   const onSubmit = (data: RegistrationRouteStopsSchema) => {
     setData(data);
-    console.log("Form submitted with data:", data);
-    // router.push("/registration/billing-info");
+    router.push("/registration/billing-info");
   };
 
   const handleMapClick = (lat: number, lng: number) => {
