@@ -19,10 +19,18 @@ type RegistrationRouteStopsSchema = z.infer<
 >;
 
 export default function RegistrationRouteStopsForm() {
+  const router = useRouter();
+
   const Map = useMemo(
     () =>
       dynamic(() => import("@/components/ui/map"), {
-        loading: () => <p>Cargando mapa...</p>,
+        loading: () => {
+          return (
+            <div className="w-full h-96 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
+              <p className="text-gray-500">Cargando mapa...</p>
+            </div>
+          );
+        },
         ssr: false,
       }),
     []
@@ -61,6 +69,9 @@ export default function RegistrationRouteStopsForm() {
 
   const loadData = useCallback(() => {
     const storedData = useRegistrationStore.getState();
+    if (!storedData.email) {
+      router.push("/registration/student-info");
+    }
     if (storedData.location) {
       const formFields = Object.keys(
         registrationRouteStopsSchema.shape
@@ -118,7 +129,7 @@ export default function RegistrationRouteStopsForm() {
         }
       });
     }
-  }, [setValue]);
+  }, [router, setValue]);
 
   useEffect(() => {
     if (!useRegistrationStore.persist.hasHydrated()) {
@@ -165,7 +176,6 @@ export default function RegistrationRouteStopsForm() {
       common: null,
     }));
   };
-  const router = useRouter();
 
   const onPrevious = () => {
     router.push("/registration/student-info");
@@ -196,6 +206,25 @@ export default function RegistrationRouteStopsForm() {
       [activeMarkerType]: { lat, lng },
     });
   };
+
+  const handleRemoveMarker = (markerType: "morning" | "afternoon") => {
+    setMarkers((prev) => ({
+      ...prev,
+      [markerType]: null,
+      common: null,
+    }));
+    setValue(`location.${markerType}`, undefined);
+
+    if (useSameLocation) {
+      setUseSameLocation(false);
+      setValue("location.afternoon", undefined);
+      setMarkers((prev) => ({
+        ...prev,
+        afternoon: null,
+      }));
+    }
+  };
+
   return (
     <form className="p-6" onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-8">
@@ -264,26 +293,65 @@ export default function RegistrationRouteStopsForm() {
           </div>
 
           {/* Instructions */}
-          <div className="bg-gray-50 p-4 rounded-md border border-gray-200 mb-4">
-            {activeMarkerType === "morning" ? (
-              <p className="text-sm text-gray-700">
-                <strong>Instrucciones:</strong> Haz clic en el mapa para
-                seleccionar la ubicación donde el estudiante será recogido en la
-                mañana.
-              </p>
-            ) : activeMarkerType === "afternoon" ? (
-              <p className="text-sm text-gray-700">
-                <strong>Instrucciones:</strong> Haz clic en el mapa para
-                seleccionar la ubicación donde el estudiante será dejado en la
-                tarde.
-              </p>
-            ) : (
-              <p className="text-sm text-gray-700">
-                <strong>Instrucciones:</strong> Seleccione primero el tipo de
-                parada (mañana o tarde) y luego haga clic en el mapa para marcar
-                la ubicación.
-              </p>
-            )}
+          <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-md mb-4 shadow-sm flex items-start">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-blue-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              {activeMarkerType === "morning" ? (
+                <p className="text-sm">
+                  <strong>Instrucciones:</strong> Haz clic en el mapa para
+                  seleccionar la ubicación donde el estudiante será recogido en
+                  la mañana.
+                </p>
+              ) : activeMarkerType === "afternoon" ? (
+                <p className="text-sm">
+                  <strong>Instrucciones:</strong> Haz clic en el mapa para
+                  seleccionar la ubicación donde el estudiante será dejado en la
+                  tarde.
+                </p>
+              ) : (
+                <p className="text-sm">
+                  <strong>Instrucciones:</strong> Seleccione primero el tipo de
+                  parada (mañana o tarde) y luego haga clic en el mapa para
+                  marcar la ubicación.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Tip Section */}
+          <div className="flex items-start text-sm text-gray-600 mb-4 p-2">
+            <div className="flex-shrink-0 mr-2">
+              <svg
+                className="h-5 w-5 text-yellow-500"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 2a.75.75 0 01.75.75v1.25a.75.75 0 01-1.5 0V2.75A.75.75 0 0110 2ZM5.005 4.495a.75.75 0 01.03.03l.75.75a.75.75 0 01-1.06 1.06l-.75-.75a.75.75 0 011.03-1.09ZM14.995 4.495a.75.75 0 011.06 0l.75.75a.75.75 0 11-1.06 1.06l-.75-.75a.75.75 0 010-1.06ZM10 6a4 4 0 100 8 4 4 0 000-8ZM8.5 9.5a.75.75 0 00-1.5 0v.5a.75.75 0 001.5 0v-.5ZM12.25 9.5a.75.75 0 01-.75.75h-.01a.75.75 0 010-1.5h.01a.75.75 0 01.75.75ZM10 18a.75.75 0 01-.75-.75v-1.25a.75.75 0 011.5 0v1.25a.75.75 0 01-.75.75Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <p className="italic">
+              <strong>Tip:</strong> Usa la barra de búsqueda o el botón de
+              localización para encontrar la dirección deseada.
+            </p>
           </div>
 
           {/* Map */}
@@ -295,42 +363,58 @@ export default function RegistrationRouteStopsForm() {
           )}
 
           {/* Selected locations display */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4 mt-6">
             <div
-              className={`p-4 rounded-md ${
+              className={`p-4 rounded-md transition-all ${
                 markers.morning
                   ? "bg-yellow-50 border border-yellow-200"
                   : "bg-gray-50 border border-gray-200"
               }`}
             >
-              <h4 className="font-medium flex items-center mb-1">
+              <h4 className="font-medium flex items-center mb-2">
                 <span className="mr-2">🌅</span> Parada de la Mañana
               </h4>
               {markers.morning ? (
-                <p className="text-sm">
-                  Ubicación: {markers.morning.latlng.lat.toFixed(6)},{" "}
-                  {markers.morning.latlng.lng.toFixed(6)}
-                </p>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium text-green-700">
+                    ✓ Ubicación seleccionada
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveMarker("morning")}
+                    className="text-sm text-red-600 hover:text-red-800 font-semibold"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">No seleccionada</p>
               )}
             </div>
 
             <div
-              className={`p-4 rounded-md ${
+              className={`p-4 rounded-md transition-all ${
                 markers.afternoon
                   ? "bg-blue-50 border border-blue-200"
                   : "bg-gray-50 border border-gray-200"
               }`}
             >
-              <h4 className="font-medium flex items-center mb-1">
+              <h4 className="font-medium flex items-center mb-2">
                 <span className="mr-2">🌆</span> Parada de la Tarde
               </h4>
               {markers.afternoon ? (
-                <p className="text-sm">
-                  Ubicación: {markers.afternoon.latlng.lat.toFixed(6)},{" "}
-                  {markers.afternoon.latlng.lng.toFixed(6)}
-                </p>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium text-green-700">
+                    ✓ Ubicación seleccionada
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveMarker("afternoon")}
+                    className="text-sm text-red-600 hover:text-red-800 font-semibold"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">No seleccionada</p>
               )}

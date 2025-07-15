@@ -17,6 +17,8 @@ type RegistrationBillingInfoSchema = z.infer<
 >;
 
 export default function RegistrationBillingInfoForm() {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -31,6 +33,12 @@ export default function RegistrationBillingInfoForm() {
   useEffect(() => {
     if (!useRegistrationStore.persist.hasHydrated) return;
 
+    if (!storedData.email) {
+      router.push("/registration/student-info");
+    } else if (!storedData.location) {
+      router.push("/registration/route-stops");
+    }
+
     const formFields = Object.keys(
       registrationBillingInfoSchema.shape
     ) as (keyof RegistrationBillingInfoSchema)[];
@@ -41,9 +49,7 @@ export default function RegistrationBillingInfoForm() {
         setValue(field, value);
       }
     });
-  }, [storedData, setValue]);
-
-  const router = useRouter();
+  }, [storedData, setValue, router]);
 
   const onPrevious = () => {
     router.push("/registration/route-stops");

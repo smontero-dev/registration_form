@@ -4,10 +4,18 @@ import {
   Marker,
   Popup,
   useMapEvents,
+  useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Markers } from "@/types";
-import { divIcon } from "leaflet";
+import * as L from "leaflet";
+import { useEffect } from "react";
+
+import "leaflet-control-geocoder/dist/Control.Geocoder.css";
+import { geocoder, geocoders } from "leaflet-control-geocoder";
+import "./map.css";
+import { LocateControl } from "leaflet.locatecontrol";
+import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
 type MapProps = {
   markers: Markers;
@@ -40,7 +48,7 @@ function LocationMarkers({ markers }: LocationMarkersProps) {
       <circle cx="14" cy="14" r="6" fill="white" />
     </svg>`;
   const markerIcon = (color: string) =>
-    divIcon({
+    L.divIcon({
       html: markerHtml(color),
       className: "",
       iconSize: [25, 41],
@@ -74,12 +82,67 @@ function OnMapClick({ onMapClick }: OnMapClickProps) {
   return null;
 }
 
+function SearchControl() {
+  const map = useMap();
+
+  useEffect(() => {
+    const gc = geocoder({
+      geocoder: new geocoders.Mapbox({
+        apiKey: process.env.NEXT_PUBLIC_MAPBOX_API_KEY,
+        geocodingQueryParams: {
+          language: "es",
+          country: "EC",
+          proximity: `${map.getCenter().lng},${map.getCenter().lat}`,
+        },
+      }),
+      defaultMarkGeocode: false,
+      placeholder: "Buscar una dirección...",
+      errorMessage: "No se encontraron resultados.",
+      collapsed: false,
+      suggestMinLength: 5,
+      suggestTimeout: 600,
+    })
+      .on("markgeocode", (e) => {
+        const latlng = e.geocode.center;
+        map.flyTo(latlng, 15);
+        gc.setQuery(e.geocode.name);
+        gc.getContainer()?.querySelector("input")?.blur();
+      })
+      .addTo(map);
+
+    return () => {
+      map.removeControl(gc);
+    };
+  }, [map]);
+
+  return null;
+}
+
+function MyLocateControl() {
+  const map = useMap();
+
+  useEffect(() => {
+    const lc = new LocateControl({
+      showPopup: false,
+      flyTo: true,
+      strings: {
+        title: "Localizar mi ubicación",
+      },
+    }).addTo(map);
+    return () => {
+      map.removeControl(lc);
+    };
+  }, [map]);
+
+  return null;
+}
+
 export default function Map({ markers, onMapClick }: MapProps) {
   return (
     <div className="h-[500px] rounded-lg overflow-hidden border border-gray-300">
       <MapContainer
         center={[-0.1807, -78.4678]} // Quito, Ecuador coordinates
-        zoom={12}
+        zoom={11}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
@@ -88,6 +151,8 @@ export default function Map({ markers, onMapClick }: MapProps) {
         />
         <LocationMarkers markers={markers} />
         <OnMapClick onMapClick={onMapClick} />
+        <SearchControl />
+        <MyLocateControl />
       </MapContainer>
     </div>
   );

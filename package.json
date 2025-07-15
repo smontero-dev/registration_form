@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@types/leaflet.locatecontrol": "^0.82.0",
     "leaflet": "^1.9.4",
+    "leaflet-control-geocoder": "^3.2.0",
+    "leaflet.locatecontrol": "^0.84.2",
     "next": "15.3.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
