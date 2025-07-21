@@ -106,6 +106,14 @@ export const registrationSchema = z.object({
       .regex(/^\d+$/, "El número de teléfono debe contener solo dígitos."),
     email: z.email("Ingrese un email válido."),
   }),
+
+  signature_type: z
+    .enum(["ONLINE_SIGNATURE", "TO_BE_SIGNED_IN_PERSON"], {
+      error:
+        "Por favor, firme el contrato o seleccione la opción 'Firmar en oficina'.",
+    })
+    .nullable()
+    .nonoptional(),
 });
 
 export type RegistrationSchema = z.infer<typeof registrationSchema>;

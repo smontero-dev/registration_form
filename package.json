@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@react-pdf/renderer": "^4.3.0",
     "@types/leaflet.locatecontrol": "^0.82.0",
+    "@types/react-measure": "^2.0.12",
     "leaflet": "^1.9.4",
     "leaflet-control-geocoder": "^3.2.0",
     "leaflet.locatecontrol": "^0.84.2",
@@ -19,6 +21,11 @@
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.60.0",
     "react-leaflet": "^5.0.0",
+    "react-measure": "^2.5.2",
+    "react-pdf": "^10.0.1",
+    "react-signature-canvas": "^1.1.0-alpha.2",
+    "throttle-ts": "^1.5.0",
+    "usehooks-ts": "^3.1.1",
     "zod": "^4.0.5",
     "zustand": "^5.0.6"
   },

@@ -57,16 +57,7 @@ export default function RegistrationBillingInfoForm() {
 
   const onSubmit = (data: RegistrationBillingInfoSchema) => {
     setData(data);
-    console.log("Billing Info Data:", { ...storedData, ...data });
-    alert(
-      `Información de facturación guardada exitosamente:\n\n` +
-        `Nombre: ${data.billingInfo.name} ${data.billingInfo.surname}\n` +
-        `Documento: ${data.billingInfo.documentType} ${data.billingInfo.documentNumber}\n` +
-        `Dirección: ${data.billingInfo.address}\n` +
-        `Teléfono: ${data.billingInfo.phone}\n` +
-        `Email: ${data.billingInfo.email}`
-    );
-    // Here you would typically handle the form submission, e.g., send data to an API
+    router.push("/registration/contract-signing");
   };
 
   return (
@@ -265,9 +256,9 @@ export default function RegistrationBillingInfoForm() {
         </button>
         <button
           type="submit"
-          className="px-8 py-3 rounded-md bg-green-600 text-white hover:bg-green-700 transition font-bold"
+          className="px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
         >
-          Enviar Registro
+          Siguiente →
         </button>
       </div>
     </form>
