@@ -74,7 +74,7 @@ export default function RegistrationStudentInfoForm() {
                 htmlFor="studentName"
                 className="block text-sm font-medium text-gray-700"
               >
-                Nombre del Estudiante *
+                Nombres del Estudiante *
               </label>
               <input
                 {...register("studentName")}
@@ -96,7 +96,7 @@ export default function RegistrationStudentInfoForm() {
                 htmlFor="studentSurname"
                 className="block text-sm font-medium text-gray-700"
               >
-                Apellido del Estudiante *
+                Apellidos del Estudiante *
               </label>
               <input
                 {...register("studentSurname")}

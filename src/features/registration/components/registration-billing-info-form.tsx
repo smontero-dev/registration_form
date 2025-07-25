@@ -6,7 +6,7 @@ import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useRegistrationStore } from "@/app/registration/store";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 const registrationBillingInfoSchema = registrationSchema.pick({
   billingInfo: true,
@@ -28,10 +28,10 @@ export default function RegistrationBillingInfoForm() {
     resolver: zodResolver(registrationBillingInfoSchema),
   });
 
-  const { setData, ...storedData } = useRegistrationStore((state) => state);
+  const setData = useRegistrationStore((state) => state.setData);
 
-  useEffect(() => {
-    if (!useRegistrationStore.persist.hasHydrated) return;
+  const checkAndRedirect = useCallback(() => {
+    const storedData = useRegistrationStore.getState();
 
     if (!storedData.email) {
       router.push("/registration/student-info");
@@ -49,7 +49,17 @@ export default function RegistrationBillingInfoForm() {
         setValue(field, value);
       }
     });
-  }, [storedData, setValue, router]);
+  }, [setValue, router]);
+
+  useEffect(() => {
+    if (!useRegistrationStore.persist.hasHydrated()) {
+      const unsubscribe = useRegistrationStore.persist.onHydrate(() => {
+        checkAndRedirect();
+      });
+      return unsubscribe;
+    }
+    checkAndRedirect();
+  }, [checkAndRedirect]);
 
   const onPrevious = () => {
     router.push("/registration/route-stops");
@@ -80,7 +90,7 @@ export default function RegistrationBillingInfoForm() {
                 htmlFor="billing-name"
                 className="block text-sm font-medium text-gray-700"
               >
-                Nombre *
+                Nombres *
               </label>
               <input
                 {...register("billingInfo.name")}
@@ -102,7 +112,7 @@ export default function RegistrationBillingInfoForm() {
                 htmlFor="billing-surname"
                 className="block text-sm font-medium text-gray-700"
               >
-                Apellido *
+                Apellidos *
               </label>
               <input
                 {...register("billingInfo.surname")}
@@ -241,7 +251,14 @@ export default function RegistrationBillingInfoForm() {
               La información proporcionada en este formulario será utilizada
               exclusivamente para fines de facturación según lo establecido en
               la normativa vigente. Los datos personales serán tratados con
-              confidencialidad de acuerdo con nuestra política de privacidad.
+              confidencialidad de acuerdo con nuestra política de privacidad y
+              en cumplimiento con la Ley Orgánica de Protección de Datos
+              Personales (LOPDP) de Ecuador, que garantiza el derecho a la
+              protección de datos personales, incluyendo su acceso,
+              rectificación, eliminación, y oposición. Como titular de los
+              datos, usted tiene derecho a ser informado sobre el uso de sus
+              datos, a acceder a ellos, y a presentar reclamos ante la autoridad
+              competente en caso de incumplimiento de la ley.
             </p>
           </div>
         </div>

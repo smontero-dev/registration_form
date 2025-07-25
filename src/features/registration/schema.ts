@@ -107,6 +107,7 @@ export const registrationSchema = z.object({
     email: z.email("Ingrese un email válido."),
   }),
 
+  price: z.number({ error: "Ingrese un número válido." }).optional(),
   signature_type: z
     .enum(["ONLINE_SIGNATURE", "TO_BE_SIGNED_IN_PERSON"], {
       error:
