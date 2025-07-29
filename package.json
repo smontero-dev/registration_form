@@ -12,6 +12,7 @@
     "@hookform/resolvers": "^5.1.1",
     "@react-pdf/renderer": "^4.3.0",
     "@types/leaflet.locatecontrol": "^0.82.0",
+    "axios": "^1.11.0",
     "leaflet": "^1.9.4",
     "leaflet-control-geocoder": "^3.2.0",
     "leaflet.locatecontrol": "^0.84.2",

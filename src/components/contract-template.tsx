@@ -17,11 +17,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 30,
     fontFamily: "Helvetica-Bold",
+    marginTop: 30,
   },
   section: {
     marginBottom: 15,
+    marginLeft: 30,
+    marginRight: 30,
   },
   sectionTitle: {
     fontSize: 16,
@@ -38,11 +41,10 @@ const styles = StyleSheet.create({
     textAlign: "justify",
   },
   signatureContainer: {
-    marginTop: 40,
     borderTopWidth: 1,
     borderTopColor: "#000000",
     paddingTop: 10,
-    width: 300,
+    width: 200,
   },
   signatureImage: {
     width: 200,
@@ -66,6 +68,7 @@ type RegistrationContractSigningData = {
   documentNumber?: string;
   signature?: string;
   parentName?: string;
+  parentSurname?: string;
   parentDocumentNumber?: string;
   monthlyCost?: number;
 };
@@ -76,11 +79,16 @@ export default function ContractTemplate({
   documentNumber,
   signature,
   parentName,
+  parentSurname,
   parentDocumentNumber,
   monthlyCost,
 }: RegistrationContractSigningData) {
   return (
-    <Document>
+    <Document
+      title="Contrato de Transporte Escolar"
+      pageMode="useOutlines"
+      pageLayout="singlePage"
+    >
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>CONTRATO DE TRANSPORTE ESCOLAR</Text>
 
@@ -258,8 +266,13 @@ export default function ContractTemplate({
 
         <View style={styles.section}>
           <Text style={styles.text}>
-            El presente contrato se firma en la ciudad del D.M. de Quito a los
-            treinta días del mes de junio del año 2025.
+            El presente contrato se firma en la ciudad del Distrito
+            Metropolitano de Quito a{" "}
+            {new Date().toLocaleDateString("es-EC", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           </Text>
         </View>
 
@@ -268,18 +281,24 @@ export default function ContractTemplate({
             PADRE Y/O MADRE Y/O REPRESENTANTE.
           </Text>
           {/* Signature section with image and info */}
-          <View style={styles.signatureContainer}>
-            {signature && (
-              // eslint-disable-next-line jsx-a11y/alt-text
-              <Image src={signature} style={styles.signatureImage} />
-            )}
-            <Text style={styles.text}>
-              Nombre: {parentName || "_____________________"}
-            </Text>
-            <Text style={styles.text}>
-              C.C. {parentDocumentNumber || "_____________________"}
-            </Text>
-          </View>
+          {signature ? (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <Image src={signature} style={styles.signatureImage} />
+          ) : (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <Image
+              src="https://placehold.co/600x400?text=FIRMA+DEL+REPRESENTANTE"
+              style={styles.signatureImage}
+            />
+          )}
+          <View style={styles.signatureContainer}></View>
+          <Text style={styles.text}>
+            Nombre: {parentName || "_____________________"}{" "}
+            {parentSurname || "_____________________"}
+          </Text>
+          <Text style={styles.text}>
+            C.C. {parentDocumentNumber || "_____________________"}
+          </Text>
         </View>
       </Page>
     </Document>
