@@ -11,10 +11,10 @@ import ContractTemplate from "@/components/contract-template";
 import { usePDF } from "@react-pdf/renderer";
 import PdfViewer from "@/components/ui/pdf-viewer";
 import SignaturePad from "react-signature-pad-wrapper";
-import {
-  addRegistration,
-  uploadContract,
-} from "@/services/registrationService";
+// import {
+//   addRegistration,
+//   uploadContract,
+// } from "@/services/registrationService";
 import SuccessModal from "@/components/ui/SuccessModal";
 
 const registrationContractSigningSchema = registrationSchema.pick({
@@ -130,9 +130,9 @@ export default function RegistrationContractSigningForm() {
           studentSurnameParts[1] ? `_${studentSurnameParts[1]}` : ""
         }_${finalData.studentName?.split(" ")[0]}_Contrato.pdf`
       );
-      const pdfFile = new File([contractPDF.blob], filename, {
-        type: "application/pdf",
-      });
+      // const pdfFile = new File([contractPDF.blob], filename, {
+      //   type: "application/pdf",
+      // });
 
       // await uploadContract(id, pdfFile);
 
