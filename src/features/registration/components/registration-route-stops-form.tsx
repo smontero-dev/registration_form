@@ -12,6 +12,7 @@ import { Markers } from "@/types";
 
 const registrationRouteStopsSchema = registrationSchema.pick({
   location: true,
+  streetInfo: true,
 });
 
 type RegistrationRouteStopsSchema = z.infer<
@@ -52,11 +53,17 @@ export default function RegistrationRouteStopsForm() {
     watch,
     handleSubmit,
     setValue,
+    register,
+    subscribe,
     formState: { errors },
   } = useForm<RegistrationRouteStopsSchema>({
     resolver: zodResolver(registrationRouteStopsSchema),
     defaultValues: {
       location: {
+        morning: undefined,
+        afternoon: undefined,
+      },
+      streetInfo: {
         morning: undefined,
         afternoon: undefined,
       },
@@ -81,51 +88,55 @@ export default function RegistrationRouteStopsForm() {
         const value = storedData[field];
         if (value !== undefined) {
           setValue(field, value);
-          let storedMarkers: Markers;
-          if (
-            value.morning !== undefined &&
-            value.afternoon !== undefined &&
-            value.morning.lat === value.afternoon.lat &&
-            value.morning.lng === value.afternoon.lng
-          ) {
-            setUseSameLocation(true);
-            storedMarkers = {
-              morning: {
-                latlng: value.morning,
-                color: "#FFC107",
-                popupContent: "Parada de la Mañana",
-              },
-              afternoon: {
-                latlng: value.afternoon,
-                color: "#3B82F6",
-                popupContent: "Parada de la Tarde",
-              },
-              common: {
-                latlng: value.morning,
-                color: "#8B5CF6",
-                popupContent: "Parada de la Mañana y Tarde",
-              },
-            };
-          } else {
-            storedMarkers = {
-              morning: value.morning
-                ? {
-                    latlng: value.morning,
-                    color: "#FFC107",
-                    popupContent: "Parada de la Mañana",
-                  }
-                : null,
-              afternoon: value.afternoon
-                ? {
-                    latlng: value.afternoon,
-                    color: "#3B82F6",
-                    popupContent: "Parada de la Tarde",
-                  }
-                : null,
-              common: null,
-            };
+          if (field === "location") {
+            const storedLocation =
+              value as RegistrationRouteStopsSchema["location"];
+            let storedMarkers: Markers;
+            if (
+              storedLocation.morning !== undefined &&
+              storedLocation.afternoon !== undefined &&
+              storedLocation.morning.lat === storedLocation.afternoon.lat &&
+              storedLocation.morning.lng === storedLocation.afternoon.lng
+            ) {
+              setUseSameLocation(true);
+              storedMarkers = {
+                morning: {
+                  latlng: storedLocation.morning,
+                  color: "#FFC107",
+                  popupContent: "Parada de la Mañana",
+                },
+                afternoon: {
+                  latlng: storedLocation.afternoon,
+                  color: "#3B82F6",
+                  popupContent: "Parada de la Tarde",
+                },
+                common: {
+                  latlng: storedLocation.morning,
+                  color: "#8B5CF6",
+                  popupContent: "Parada de la Mañana y Tarde",
+                },
+              };
+            } else {
+              storedMarkers = {
+                morning: storedLocation.morning
+                  ? {
+                      latlng: storedLocation.morning,
+                      color: "#FFC107",
+                      popupContent: "Parada de la Mañana",
+                    }
+                  : null,
+                afternoon: storedLocation.afternoon
+                  ? {
+                      latlng: storedLocation.afternoon,
+                      color: "#3B82F6",
+                      popupContent: "Parada de la Tarde",
+                    }
+                  : null,
+                common: null,
+              };
+            }
+            setMarkers(storedMarkers);
           }
-          setMarkers(storedMarkers);
         }
       });
     }
@@ -145,6 +156,10 @@ export default function RegistrationRouteStopsForm() {
   useEffect(() => {
     if (useSameLocation) {
       setValue("location.afternoon", location.morning);
+
+      const morningStreetInfo = watch("streetInfo.morning");
+      setValue("streetInfo.afternoon", morningStreetInfo);
+
       setMarkers((prev) => ({
         ...prev,
         afternoon: prev.morning
@@ -166,10 +181,24 @@ export default function RegistrationRouteStopsForm() {
         setActiveMarkerType("morning");
       }
     }
-  }, [useSameLocation, location.morning, setValue, activeMarkerType]);
+  }, [useSameLocation, location.morning, setValue, activeMarkerType, watch]);
+
+  useEffect(() => {
+    const callback = subscribe({
+      name: ["streetInfo.morning"],
+      callback: ({ values }) => {
+        if (useSameLocation) {
+          setValue("streetInfo.afternoon", values.streetInfo.morning);
+        }
+      },
+    });
+
+    return () => callback();
+  }, [setValue, subscribe, useSameLocation]);
 
   const onUncheckedChange = () => {
     setValue("location.afternoon", undefined);
+    setValue("streetInfo.afternoon", undefined);
     setMarkers((prev) => ({
       ...prev,
       afternoon: null,
@@ -214,10 +243,12 @@ export default function RegistrationRouteStopsForm() {
       common: null,
     }));
     setValue(`location.${markerType}`, undefined);
+    setValue(`streetInfo.${markerType}`, undefined);
 
     if (useSameLocation) {
       setUseSameLocation(false);
       setValue("location.afternoon", undefined);
+      setValue("streetInfo.afternoon", undefined);
       setMarkers((prev) => ({
         ...prev,
         afternoon: null,
@@ -365,27 +396,137 @@ export default function RegistrationRouteStopsForm() {
           {/* Selected locations display */}
           <div className="grid md:grid-cols-2 gap-4 mt-6">
             <div
-              className={`p-4 rounded-md transition-all ${
+              className={`p-4 rounded-md transition-all shadow-sm ${
                 markers.morning
                   ? "bg-yellow-50 border border-yellow-200"
                   : "bg-gray-50 border border-gray-200"
               }`}
             >
-              <h4 className="font-medium flex items-center mb-2">
+              <h4 className="font-medium flex items-center mb-3 text-yellow-800">
                 <span className="mr-2">🌅</span> Parada de la Mañana
               </h4>
               {markers.morning ? (
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-medium text-green-700">
-                    ✓ Ubicación seleccionada
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMarker("morning")}
-                    className="text-sm text-red-600 hover:text-red-800 font-semibold"
-                  >
-                    Eliminar
-                  </button>
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm font-medium text-green-700 flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1 text-green-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Ubicación seleccionada
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMarker("morning")}
+                      className="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Eliminar
+                    </button>
+                  </div>
+
+                  <div className="mb-3 p-2 bg-yellow-50 border-l-2 border-yellow-400 text-yellow-700 text-sm">
+                    <div className="flex">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2 flex-shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>
+                        <strong>Importante:</strong> Complete la información de
+                        la dirección para ayudar al conductor a ubicar
+                        exactamente la parada. Estos detalles complementan la
+                        ubicación del mapa.
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-3">
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Calle principal y número
+                      </label>
+                      <div className="relative rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-gray-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          {...register("streetInfo.morning.mainStreet")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
+                            errors.streetInfo?.morning?.mainStreet
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                              : ""
+                          }`}
+                          placeholder="Ej: Calle 123 #45-67"
+                        />
+                      </div>
+                      {errors.streetInfo?.morning?.mainStreet && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.streetInfo.morning.mainStreet.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Calle secundaria/referencia
+                      </label>
+                      <div className="relative rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-gray-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          {...register("streetInfo.morning.secondaryStreet")}
+                          className="block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          placeholder="Ej: Esquina con Av. Principal"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">No seleccionada</p>
@@ -393,27 +534,137 @@ export default function RegistrationRouteStopsForm() {
             </div>
 
             <div
-              className={`p-4 rounded-md transition-all ${
+              className={`p-4 rounded-md transition-all shadow-sm ${
                 markers.afternoon
                   ? "bg-blue-50 border border-blue-200"
                   : "bg-gray-50 border border-gray-200"
               }`}
             >
-              <h4 className="font-medium flex items-center mb-2">
+              <h4 className="font-medium flex items-center mb-3 text-blue-800">
                 <span className="mr-2">🌆</span> Parada de la Tarde
               </h4>
               {markers.afternoon ? (
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-medium text-green-700">
-                    ✓ Ubicación seleccionada
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMarker("afternoon")}
-                    className="text-sm text-red-600 hover:text-red-800 font-semibold"
-                  >
-                    Eliminar
-                  </button>
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm font-medium text-green-700 flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1 text-green-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Ubicación seleccionada
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMarker("afternoon")}
+                      className="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Eliminar
+                    </button>
+                  </div>
+
+                  <div className="mb-3 p-2 bg-blue-50 border-l-2 border-blue-400 text-blue-700 text-sm">
+                    <div className="flex">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2 flex-shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>
+                        <strong>Importante:</strong> Complete la información de
+                        la dirección para ayudar al conductor a ubicar
+                        exactamente la parada. Estos detalles complementan la
+                        ubicación del mapa.
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-3">
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Calle principal y número
+                      </label>
+                      <div className="relative rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-gray-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          {...register("streetInfo.afternoon.mainStreet")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
+                            errors.streetInfo?.afternoon?.mainStreet
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                              : ""
+                          }`}
+                          placeholder="Ej: Calle 123 #45-67"
+                        />
+                      </div>
+                      {errors.streetInfo?.afternoon?.mainStreet && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.streetInfo.afternoon.mainStreet.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Calle secundaria/referencia
+                      </label>
+                      <div className="relative rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-gray-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          {...register("streetInfo.afternoon.secondaryStreet")}
+                          className="block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          placeholder="Ej: Esquina con Av. Principal"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">No seleccionada</p>

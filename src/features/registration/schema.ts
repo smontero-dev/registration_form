@@ -92,6 +92,21 @@ export const registrationSchema = z.object({
       message: "Debe seleccionar al menos una ubicación (Mañana o Tarde).",
     }),
 
+  streetInfo: z.object({
+    morning: z
+      .object({
+        mainStreet: z.string().nonempty("Este es un campo requerido."),
+        secondaryStreet: z.string().optional(),
+      })
+      .optional(),
+    afternoon: z
+      .object({
+        mainStreet: z.string().nonempty("Este es un campo requerido."),
+        secondaryStreet: z.string().optional(),
+      })
+      .optional(),
+  }),
+
   billingInfo: z.object({
     name: z.string().nonempty("Este es un campo requerido."),
     surname: z.string().nonempty("Este es un campo requerido."),
