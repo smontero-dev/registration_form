@@ -55,6 +55,7 @@ export default function RegistrationRouteStopsForm() {
     setValue,
     register,
     subscribe,
+    reset,
     formState: { errors },
   } = useForm<RegistrationRouteStopsSchema>({
     resolver: zodResolver(registrationRouteStopsSchema),
@@ -212,6 +213,7 @@ export default function RegistrationRouteStopsForm() {
 
   const onSubmit = (data: RegistrationRouteStopsSchema) => {
     setData(data);
+    reset();
     router.push("/registration/billing-info");
   };
 

@@ -31,6 +31,7 @@ export default function RegistrationStudentInfoForm() {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<RegistrationStudentInfoSchema>({
     resolver: zodResolver(registrationStudentInfoSchema),
@@ -60,6 +61,7 @@ export default function RegistrationStudentInfoForm() {
 
   const onSubmit = (data: RegistrationStudentInfoSchema) => {
     setData(data);
+    reset();
     router.push("/registration/route-stops");
   };
 

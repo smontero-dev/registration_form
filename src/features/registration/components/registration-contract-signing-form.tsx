@@ -199,7 +199,7 @@ export default function RegistrationContractSigningForm() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    router.push("/");
+    window.location.href = "/";
   };
 
   return (

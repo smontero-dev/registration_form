@@ -23,6 +23,7 @@ export default function RegistrationBillingInfoForm() {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<RegistrationBillingInfoSchema>({
     resolver: zodResolver(registrationBillingInfoSchema),
@@ -67,6 +68,7 @@ export default function RegistrationBillingInfoForm() {
 
   const onSubmit = (data: RegistrationBillingInfoSchema) => {
     setData(data);
+    reset();
     router.push("/registration/contract-signing");
   };
 
