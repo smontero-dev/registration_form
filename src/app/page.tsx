@@ -48,8 +48,10 @@ export default function Home() {
       }
     }
 
-    verifyToken();
-  }, [token, router]);
+    if (!isAuthorized) {
+      verifyToken();
+    }
+  }, [token, router, isAuthorized]);
 
   const renderButton = () => {
     if (isLoading) {
