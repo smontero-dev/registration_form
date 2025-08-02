@@ -16,7 +16,6 @@ export default function RegistrationLayout({
     const verifyAccess = async () => {
       try {
         const { authorized } = await checkAuthStatus();
-        // const authorized = true; // Force authorization for testing
         if (!authorized) {
           router.replace("/");
         }

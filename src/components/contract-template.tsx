@@ -44,11 +44,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#000000",
     paddingTop: 10,
-    width: 200,
+    width: 300,
   },
   signatureImage: {
-    width: 200,
-    height: 80,
+    width: 300,
+    height: 120,
     marginBottom: 10,
   },
   footer: {
@@ -287,7 +287,7 @@ export default function ContractTemplate({
           ) : (
             // eslint-disable-next-line jsx-a11y/alt-text
             <Image
-              src="https://placehold.co/600x400?text=FIRMA+DEL+REPRESENTANTE"
+              src="/images/signing-placeholder.png"
               style={styles.signatureImage}
             />
           )}

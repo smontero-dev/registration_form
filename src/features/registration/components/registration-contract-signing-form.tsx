@@ -8,13 +8,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegistrationStore } from "@/app/registration/store";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ContractTemplate from "@/components/contract-template";
-import { usePDF } from "@react-pdf/renderer";
+import { pdf, usePDF } from "@react-pdf/renderer";
 import PdfViewer from "@/components/ui/pdf-viewer";
 import SignaturePad from "react-signature-pad-wrapper";
-// import {
-//   addRegistration,
-//   uploadContract,
-// } from "@/services/registrationService";
+import {
+  addRegistration,
+  uploadContract,
+} from "@/services/registrationService";
 import SuccessModal from "@/components/ui/SuccessModal";
 
 const registrationContractSigningSchema = registrationSchema.pick({
@@ -34,6 +34,7 @@ export default function RegistrationContractSigningForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [filename, setFilename] = useState("");
+  const [signedContract, setSignedContract] = useState<Blob | null>(null);
 
   const {
     handleSubmit,
@@ -55,7 +56,7 @@ export default function RegistrationContractSigningForm() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { setData, ...storedData } = useRegistrationStore.getState();
 
-  const [contractPDF, updateContractPDF] = usePDF({
+  const [contractPDF] = usePDF({
     document: (
       <ContractTemplate
         studentName={storedData.studentName}
@@ -104,10 +105,10 @@ export default function RegistrationContractSigningForm() {
     };
 
     try {
-      // const response = await addRegistration(finalData);
-      // const { id } = response;
+      const response = await addRegistration(finalData);
+      const { id } = response;
 
-      updateContractPDF(
+      const signedContractPDF = (
         <ContractTemplate
           studentName={finalData.studentName}
           studentSurname={finalData.studentSurname}
@@ -120,22 +121,18 @@ export default function RegistrationContractSigningForm() {
         />
       );
 
-      if (!contractPDF.blob) {
+      const contractBlob = await pdf(signedContractPDF).toBlob();
+      if (!contractBlob) {
         throw new Error("Error generating PDF");
       }
 
-      const studentSurnameParts = finalData.studentSurname?.split(" ") || [];
-      setFilename(
-        `${studentSurnameParts[0]}${
-          studentSurnameParts[1] ? `_${studentSurnameParts[1]}` : ""
-        }_${finalData.studentName?.split(" ")[0]}_Contrato.pdf`
-      );
-      // const pdfFile = new File([contractPDF.blob], filename, {
-      //   type: "application/pdf",
-      // });
-
-      // await uploadContract(id, pdfFile);
-
+      setSignedContract(contractBlob);
+      const generatedFilename = `${finalData.studentSurname?.replaceAll(
+        " ",
+        "_"
+      )}_${finalData.studentName?.replaceAll(" ", "_")}_Contrato.pdf`;
+      setFilename(generatedFilename);
+      await uploadContract(id, contractBlob);
       setIsModalOpen(true);
       useRegistrationStore.persist.clearStorage();
       reset();
@@ -187,10 +184,10 @@ export default function RegistrationContractSigningForm() {
   }, [handleEndSignature]);
 
   const handleDownload = (filename: string) => {
-    if (contractPDF.blob && contractPDF.url) {
+    if (signedContract) {
       setIsDownloading(true);
       const a = document.createElement("a");
-      a.href = contractPDF.url;
+      a.href = URL.createObjectURL(signedContract);
       a.download = filename;
       document.body.appendChild(a);
       a.click();

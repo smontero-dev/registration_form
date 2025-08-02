@@ -1,7 +1,7 @@
 "use client";
 
 import AnimatedBus from "@/components/animated-bus";
-import { validateToken } from "@/services/authService";
+import { checkAuthStatus, validateToken } from "@/services/authService";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,6 +16,18 @@ export default function Home() {
   useEffect(() => {
     async function verifyToken() {
       if (!token) {
+        const { authorized } = await checkAuthStatus()
+          .catch((err) => {
+            if (err.status === 403) {
+              return { authorized: false };
+            }
+          })
+          .then((res) => {
+            return { authorized: res?.authorized ?? false };
+          });
+        if (authorized) {
+          setIsAuthorized(true);
+        }
         setIsLoading(false);
         return;
       }
@@ -32,7 +44,7 @@ export default function Home() {
         );
       } finally {
         setIsLoading(false);
-        // router.replace("/", { scroll: false });
+        router.replace("/", { scroll: false });
       }
     }
 
