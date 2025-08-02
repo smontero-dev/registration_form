@@ -469,7 +469,7 @@ export default function RegistrationRouteStopsForm() {
                   <div className="mt-3 space-y-3">
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Calle principal y número
+                        Calle principal y número *
                       </label>
                       <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -505,7 +505,7 @@ export default function RegistrationRouteStopsForm() {
                     </div>
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Calle secundaria/referencia
+                        Calle secundaria/referencia (opcional)
                       </label>
                       <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -607,7 +607,7 @@ export default function RegistrationRouteStopsForm() {
                   <div className="mt-3 space-y-3">
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Calle principal y número
+                        Calle principal y número *
                       </label>
                       <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -648,7 +648,7 @@ export default function RegistrationRouteStopsForm() {
                     </div>
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Calle secundaria/referencia
+                        Calle secundaria/referencia (opcional)
                       </label>
                       <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
