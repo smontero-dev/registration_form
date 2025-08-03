@@ -123,7 +123,7 @@ export default function Home() {
             <p>
               Para consultas o asistencia, contactar con la{" "}
               <a
-                href="mailto:soporte@transporte-escolar.com"
+                href="mailto:transporteinmaculada2@gmail.com"
                 className="text-[#1e213a] font-medium hover:text-[#2a2d4a] underline decoration-2 underline-offset-2 transition-colors"
               >
                 oficina de transporte escolar
