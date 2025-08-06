@@ -258,9 +258,13 @@ export default function ContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>
               DECIMA TERCERA: Aceptación.-
             </Text>{" "}
-            Las partes aceptan el total contenido del presente documento, y para
-            constancia suscriben el presente contrato en dos ejemplares de igual
-            valor y tenor.
+            Las partes aceptan el total contenido del presente documento. De
+            conformidad con la Ley de Comercio Electrónico, Firmas Electrónicas
+            y Mensajes de Datos de la República del Ecuador, las partes
+            reconocen y aceptan que la suscripción de este contrato mediante su
+            firma electrónica, realizada a través del trazo con el dedo o el
+            ratón en la plataforma web, tiene la misma validez y efectos
+            jurídicos que una firma manuscrita.
           </Text>
         </View>
 
