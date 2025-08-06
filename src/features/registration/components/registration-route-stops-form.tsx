@@ -326,10 +326,18 @@ export default function RegistrationRouteStopsForm() {
           </div>
 
           {/* Instructions */}
-          <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-md mb-4 shadow-sm flex items-start">
+          <div
+            className={`border-l-4 p-4 rounded-md mb-4 shadow-sm flex items-start ${
+              !activeMarkerType
+                ? "bg-orange-50 border-orange-400 text-orange-800"
+                : "bg-teal-50 border-teal-500 text-teal-800"
+            }`}
+          >
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-blue-400"
+                className={`h-5 w-5 ${
+                  !activeMarkerType ? "text-orange-400" : "text-teal-500"
+                }`}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"

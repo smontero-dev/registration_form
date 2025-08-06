@@ -7,19 +7,24 @@ import {
   View,
   StyleSheet,
   Image,
+  Font,
 } from "@react-pdf/renderer";
+
+// Disable hyphenation
+Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
   page: {
     padding: 30,
     fontFamily: "Helvetica",
+    marginTop: 15,
   },
   title: {
     fontSize: 24,
     textAlign: "center",
     marginBottom: 30,
     fontFamily: "Helvetica-Bold",
-    marginTop: 30,
+    marginTop: 10,
   },
   section: {
     marginBottom: 15,
@@ -241,7 +246,8 @@ export default function ContractTemplate({
             correctivas y sanciones oportunas de ser el caso.
           </Text>
         </View>
-
+      </Page>
+      <Page size="A4" style={styles.page}>
         <View style={styles.section}>
           <Text style={styles.text}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>
@@ -258,9 +264,13 @@ export default function ContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>
               DECIMA TERCERA: Aceptación.-
             </Text>{" "}
-            Las partes aceptan el total contenido del presente documento, y para
-            constancia suscriben el presente contrato en dos ejemplares de igual
-            valor y tenor.
+            Las partes aceptan el total contenido del presente documento. De
+            conformidad con la Ley de Comercio Electrónico, Firmas Electrónicas
+            y Mensajes de Datos de la República del Ecuador, las partes
+            reconocen y aceptan que la suscripción de este contrato mediante su
+            firma electrónica, realizada a través del trazo con el dedo o el
+            ratón en la plataforma web, tiene la misma validez y efectos
+            jurídicos que una firma manuscrita.
           </Text>
         </View>
 
