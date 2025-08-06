@@ -7,19 +7,24 @@ import {
   View,
   StyleSheet,
   Image,
+  Font,
 } from "@react-pdf/renderer";
+
+// Disable hyphenation
+Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
   page: {
     padding: 30,
     fontFamily: "Helvetica",
+    marginTop: 15,
   },
   title: {
     fontSize: 24,
     textAlign: "center",
     marginBottom: 30,
     fontFamily: "Helvetica-Bold",
-    marginTop: 30,
+    marginTop: 10,
   },
   section: {
     marginBottom: 15,
@@ -241,7 +246,8 @@ export default function ContractTemplate({
             correctivas y sanciones oportunas de ser el caso.
           </Text>
         </View>
-
+      </Page>
+      <Page size="A4" style={styles.page}>
         <View style={styles.section}>
           <Text style={styles.text}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>
