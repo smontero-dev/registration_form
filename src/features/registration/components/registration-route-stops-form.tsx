@@ -525,7 +525,7 @@ export default function RegistrationRouteStopsForm() {
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
-                            <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                           </svg>
                         </div>
                         <input
@@ -548,29 +548,33 @@ export default function RegistrationRouteStopsForm() {
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
-                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                         <input
                           type="text"
-                          // {...register("streetInfo.morning.neighborhood")}
-                          // className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                          //   errors.streetInfo?.morning?.neighborhood
-                          //     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                          //     : ""
-                          // }`}
+                          {...register("streetInfo.morning.neighborhood")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
+                            errors.streetInfo?.morning?.neighborhood
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                              : ""
+                          }`}
                           placeholder="Ej: Kennedy Norte"
                         />
                       </div>
-                      {/* {errors.streetInfo?.morning?.neighborhood && (
+                      {errors.streetInfo?.morning?.neighborhood && (
                         <p className="mt-1 text-sm text-red-600">
                           {errors.streetInfo.morning.neighborhood.message}
                         </p>
-                      )} */}
+                      )}
                     </div>
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Puntos de Referencia *
+                        Puntos de Referencia (Opcional)
                       </label>
                       <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -580,25 +584,29 @@ export default function RegistrationRouteStopsForm() {
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
-                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
-                        <textarea
-                          // {...register("streetInfo.morning.referencePoints")}
-                          // className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                          //   errors.streetInfo?.morning?.referencePoints
-                          //     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                          //     : ""
-                          // }`}
+                        <input
+                          type="text"
+                          {...register("streetInfo.morning.referencePoints")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
+                            errors.streetInfo?.morning?.referencePoints
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                              : ""
+                          }`}
                           placeholder="Ej: Cerca del parque Kennedy, frente al Banco Pichincha"
-                          rows={3}
                         />
                       </div>
-                      {/* {errors.streetInfo?.morning?.referencePoints && (
+                      {errors.streetInfo?.morning?.referencePoints && (
                         <p className="mt-1 text-sm text-red-600">
                           {errors.streetInfo.morning.referencePoints.message}
                         </p>
-                      )} */}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -681,7 +689,7 @@ export default function RegistrationRouteStopsForm() {
                   <div className="mt-3 space-y-3">
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Calle principal y número *
+                        Dirección Principal / Calle *
                       </label>
                       <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -711,7 +719,7 @@ export default function RegistrationRouteStopsForm() {
                               : ""
                           }`}
                           disabled={useSameLocation}
-                          placeholder="Ej: Calle 123 #45-67"
+                          placeholder="Ej: Av. 9 de Octubre y Boyacá"
                         />
                       </div>
                       {errors.streetInfo?.afternoon?.mainStreet && (
@@ -722,7 +730,7 @@ export default function RegistrationRouteStopsForm() {
                     </div>
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Calle secundaria/referencia (opcional)
+                        Dirección Secundaria (Opcional)
                       </label>
                       <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -732,7 +740,7 @@ export default function RegistrationRouteStopsForm() {
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
-                            <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                           </svg>
                         </div>
                         <input
@@ -744,9 +752,91 @@ export default function RegistrationRouteStopsForm() {
                               : ""
                           }`}
                           disabled={useSameLocation}
-                          placeholder="Ej: Esquina con Av. Principal"
+                          placeholder="Ej: Edificio Torres del Sol, Piso 5, Apto 502"
                         />
                       </div>
+                    </div>
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Barrio / Sector *
+                      </label>
+                      <div className="relative rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-gray-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          {...register("streetInfo.afternoon.neighborhood")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
+                            errors.streetInfo?.afternoon?.neighborhood
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                              : ""
+                          } ${
+                            useSameLocation
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          disabled={useSameLocation}
+                          placeholder="Ej: Kennedy Norte"
+                        />
+                      </div>
+                      {errors.streetInfo?.afternoon?.neighborhood && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.streetInfo.afternoon.neighborhood.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Puntos de Referencia (Opcional)
+                      </label>
+                      <div className="relative rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-gray-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          {...register("streetInfo.afternoon.referencePoints")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
+                            errors.streetInfo?.afternoon?.referencePoints
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                              : ""
+                          } ${
+                            useSameLocation
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          disabled={useSameLocation}
+                          placeholder="Ej: Cerca del parque Kennedy, frente al Banco Pichincha"
+                        />
+                      </div>
+                      {errors.streetInfo?.afternoon?.referencePoints && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.streetInfo.afternoon.referencePoints.message}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

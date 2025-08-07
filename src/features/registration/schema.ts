@@ -97,30 +97,19 @@ export const registrationSchema = z.object({
       .object({
         mainStreet: z.string().nonempty("Este es un campo requerido."),
         secondaryStreet: z.string().optional(),
+        neighborhood: z.string().nonempty("Este es un campo requerido."),
+        referencePoints: z.string().optional(),
       })
       .optional(),
     afternoon: z
       .object({
         mainStreet: z.string().nonempty("Este es un campo requerido."),
         secondaryStreet: z.string().optional(),
+        neighborhood: z.string().nonempty("Este es un campo requerido."),
+        referencePoints: z.string().optional(),
       })
       .optional(),
   }),
-
-//   streetInfo: z.object({
-//   morning: z.object({
-//     mainStreet: z.string().min(1, "La dirección principal es requerida"),
-//     secondaryStreet: z.string().optional(),
-//     neighborhood: z.string().min(1, "El barrio/sector es requerido"),
-//     referencePoints: z.string().min(1, "Los puntos de referencia son requeridos"),
-//   }),
-//   afternoon: z.object({
-//     mainStreet: z.string().min(1, "La dirección principal es requerida"),
-//     secondaryStreet: z.string().optional(),
-//     neighborhood: z.string().min(1, "El barrio/sector es requerido"),
-//     referencePoints: z.string().min(1, "Los puntos de referencia son requeridos"),
-//   }),
-// }),
 
   billingInfo: z.object({
     name: z.string().nonempty("Este es un campo requerido."),
