@@ -1,15 +1,18 @@
 "use client";
 
-import { useAuthenticator } from "@aws-amplify/ui-react";
+import StudentList from "@/features/admin/components/StudentList";
 
 export default function AdminPage() {
-  const { user, signOut } = useAuthenticator((context) => [context.user])
-
   return (
-    <div>
-      <h1>Admin Page</h1>
-      <p>Welcome, {user?.username}!</p>
-      <button className="font-bold" onClick={signOut}>Sign Out</button>
+    <div className="flex flex-col h-screen">
+      <main className="flex flex-1 overflow-hidden">
+        <div className="w-[70%] h-full">
+          <h1>MAP</h1>
+        </div>
+        <div className="w-[30%] h-full border-l overflow-y-auto">
+          <StudentList />
+        </div>
+      </main>
     </div>
   );
 }

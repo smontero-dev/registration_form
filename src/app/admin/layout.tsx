@@ -30,7 +30,7 @@ export default function AdminLayout({
 
     return (
         <ThemeProvider theme={theme}>
-            {/* <Authenticator variation="modal" hideSignUp>
+            <Authenticator variation="modal" hideSignUp>
                 {({ signOut }) => (
                     <div>
                         <AdminHeader signOut={signOut} />
@@ -39,16 +39,7 @@ export default function AdminLayout({
                         </main>
                     </div>
                 )}
-            </Authenticator> */}
-            <Authenticator variation="modal" hideSignUp />
-            {user &&
-                <>
-                    {/* <AdminHeader /> */}
-                    <main className="p-8">
-                        {children}
-                    </main>
-                </>
-            }
+            </Authenticator>
         </ThemeProvider>
     );
 }
