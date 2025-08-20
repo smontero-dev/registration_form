@@ -31,7 +31,7 @@ export default function StudentInfo({ student }: StudentInfoProps) {
 
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={closeModal}
         >
           <div
@@ -44,10 +44,40 @@ export default function StudentInfo({ student }: StudentInfoProps) {
               </h2>
               <button
                 onClick={closeModal}
-                className="text-gray-500 hover:text-gray-800 transition-colors text-2xl"
+                className="text-gray-500 hover:text-gray-800 transition-colors text-2xl cursor-pointer"
               >
                 &times;
               </button>
+            </div>
+
+            {/* Route Info */}
+            <div className="mb-8">
+              <InfoSection title="Información de Ubicación y Rutas">
+                <div className={
+                  student.location.morning.lat && student.location.afternoon.lat
+                    ? "grid grid-cols-1 md:grid-cols-2 gap-8"
+                    : "flex justify-center"
+                }>
+                  {student.location.morning.lat && <div>
+                    <h4 className="font-semibold text-lg text-gray-700 mb-2">
+                      Ubicación de Mañana
+                    </h4>
+                    <RouteAssignmentStatus
+                      assignedRoute={student.route?.morning}
+                    />
+                    <AddressInfo address={student.streetInfo.morning} />
+                  </div>}
+                  {student.location.afternoon.lat && <div>
+                    <h4 className="font-semibold text-lg text-gray-700 mb-2">
+                      Ubicación de Tarde
+                    </h4>
+                    <RouteAssignmentStatus
+                      assignedRoute={student.route?.afternoon}
+                    />
+                    <AddressInfo address={student.streetInfo.afternoon} />
+                  </div>}
+                </div>
+              </InfoSection>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -107,26 +137,6 @@ export default function StudentInfo({ student }: StudentInfoProps) {
               </div>
             </div>
 
-            {/* Route Info */}
-            <div className="mt-8">
-              <InfoSection title="Información de la Ruta">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <h4 className="font-semibold text-lg text-gray-700 mb-2">
-                      Ruta de Mañana
-                    </h4>
-                    <AddressInfo address={student.streetInfo.morning} />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-lg text-gray-700 mb-2">
-                      Ruta de Tarde
-                    </h4>
-                    <AddressInfo address={student.streetInfo.afternoon} />
-                  </div>
-                </div>
-              </InfoSection>
-            </div>
-
             {/* Additional Info */}
             {student.additionalInfo && (
               <div className="mt-8">
@@ -141,7 +151,7 @@ export default function StudentInfo({ student }: StudentInfoProps) {
             <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
               <button
                 onClick={closeModal}
-                className="px-6 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700 transition"
+                className="px-6 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700 transition cursor-pointer"
               >
                 Cerrar
               </button>
@@ -160,18 +170,18 @@ const InfoSection = ({
   title: string;
   children: React.ReactNode;
 }) => (
-  <div className="p-4 border border-gray-200 rounded-lg">
-    <h3 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+  <div className="bg-gray-50/70 rounded-lg p-5">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-600 pl-3">
       {title}
     </h3>
-    <div className="space-y-3">{children}</div>
+    <div>{children}</div>
   </div>
 );
 
 const InfoItem = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between">
-    <p className="font-medium text-gray-600">{label}:</p>
-    <p className="text-gray-800 text-right">{value}</p>
+  <div className="grid grid-cols-12 gap-2 text-sm py-2 border-b border-gray-200/60 last:border-b-0">
+    <p className="col-span-5 text-gray-500">{label}</p>
+    <p className="col-span-7 text-gray-900 font-medium text-right">{value}</p>
   </div>
 );
 
@@ -180,15 +190,26 @@ const AddressInfo = ({
 }: {
   address: {
     mainStreet: string;
-    secondaryStreet: string;
+    secondaryStreet?: string;
     neighborhood: string;
-    referencePoints: string;
+    referencePoints?: string;
   };
 }) => (
-  <div className="space-y-2 text-sm">
+  <div className="text-sm mt-2">
     <InfoItem label="Calle Principal" value={address.mainStreet} />
-    <InfoItem label="Calle Secundaria" value={address.secondaryStreet} />
+    <InfoItem label="Calle Secundaria" value={address.secondaryStreet ?? ""} />
     <InfoItem label="Barrio" value={address.neighborhood} />
-    <InfoItem label="Referencia" value={address.referencePoints} />
+    <InfoItem label="Referencia" value={address.referencePoints ?? ""} />
+  </div>
+);
+
+const RouteAssignmentStatus = ({ assignedRoute }: { assignedRoute: string | undefined }) => (
+  <div
+    className={`p-3 rounded-lg text-center mb-3 text-sm font-bold ${assignedRoute && assignedRoute !== ""
+      ? "bg-green-100 text-green-800"
+      : "bg-yellow-100 text-yellow-800"
+      }`}
+  >
+    {(assignedRoute && assignedRoute !== "") ? assignedRoute.toUpperCase() : "SIN RUTA ASIGNADA"}
   </div>
 );

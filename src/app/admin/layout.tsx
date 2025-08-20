@@ -1,7 +1,7 @@
 "use client";
 
 import { Authenticator, Theme, ThemeProvider, useAuthenticator } from "@aws-amplify/ui-react";
-import '@aws-amplify/ui-react/styles.css';
+// import '@aws-amplify/ui-react/styles.css';
 import "@/lib/amplify-config";
 import AdminHeader from "@/components/ui/AdminHeader";
 
@@ -25,8 +25,6 @@ export default function AdminLayout({
         },
         name: "custom"
     }
-
-    const { user, signOut } = useAuthenticator();
 
     return (
         <ThemeProvider theme={theme}>

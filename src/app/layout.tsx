@@ -1,6 +1,5 @@
 "use client";
 
-import { Authenticator } from "@aws-amplify/ui-react";
 import "./globals.css";
 import { Suspense } from "react";
 
@@ -22,9 +21,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
-        <Authenticator.Provider>
-          <Suspense>{children}</Suspense>
-        </Authenticator.Provider>
+        <Suspense>{children}</Suspense>
       </body>
     </html>
   );

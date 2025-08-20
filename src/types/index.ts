@@ -41,13 +41,17 @@ export type Student = {
     morning: Coordinates;
     afternoon: Coordinates;
   };
+  route?: {
+    morning: string;
+    afternoon: string;
+  }
 };
 
 export type Address = {
   mainStreet: string;
-  secondaryStreet: string;
+  secondaryStreet?: string;
   neighborhood: string;
-  referencePoints: string;
+  referencePoints?: string;
 };
 
 export type BillingInfo = {
