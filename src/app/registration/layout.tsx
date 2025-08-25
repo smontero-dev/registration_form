@@ -38,22 +38,26 @@ export default function RegistrationLayout({
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
-      <div className="bg-[#1e213a] p-6">
-        <h1 className="text-3xl font-bold text-white">
-          Registro de Estudiante
-        </h1>
-        <p className="mt-2 text-gray-300">
-          Por favor complete toda la información requerida para el registro de
-          transporte escolar
-        </p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4">
+        <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+          <div className="bg-[#1e213a] p-6">
+            <h1 className="text-3xl font-bold text-white">
+              Registro de Estudiante
+            </h1>
+            <p className="mt-2 text-gray-300">
+              Por favor complete toda la información requerida para el registro de
+              transporte escolar
+            </p>
+          </div>
+
+          {/* Progress indicator */}
+          {/* <FormProgress steps={steps} currentStep={currentStep} /> */}
+
+          {/* Form */}
+          {children}
+        </div>
       </div>
-
-      {/* Progress indicator */}
-      {/* <FormProgress steps={steps} currentStep={currentStep} /> */}
-
-      {/* Form */}
-      {children}
-    </div>
+    </div >
   );
 }
