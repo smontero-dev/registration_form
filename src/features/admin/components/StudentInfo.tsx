@@ -1,165 +1,149 @@
 "use client";
 
-import { useState } from "react";
-import { Student } from "@/types";
+import { RouteAttr, Student } from "@/types";
+import { titleCase } from "title-case";
 
 type StudentInfoProps = {
   student: Student;
+  onCloseModal: () => void;
 };
 
-export default function StudentInfo({ student }: StudentInfoProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+export default function StudentInfo({ student, onCloseModal }: StudentInfoProps) {
+  const closeModal = () => onCloseModal();
 
   const stopPropagation = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 
   return (
-    <>
+    <div
+      className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"
+      onClick={closeModal}
+    >
       <div
-        onClick={openModal}
-        className="p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8"
+        onClick={stopPropagation}
       >
-        <p className="font-semibold text-lg text-gray-800">
-          {student.studentName} {student.studentSurname}
-        </p>
-        <p className="text-sm text-gray-600">{student.grade}</p>
-      </div>
-
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div
-            className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8"
-            onClick={stopPropagation}
+        <div className="flex justify-between items-start mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">
+            {titleCase(student.studentName.trim().toLowerCase())} {titleCase(student.studentSurname.trim().toLowerCase())}
+          </h2>
+          <button
+            onClick={closeModal}
+            className="text-gray-500 hover:text-gray-800 transition-colors text-2xl cursor-pointer"
           >
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-3xl font-bold text-gray-800">
-                {student.studentName} {student.studentSurname}
-              </h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-500 hover:text-gray-800 transition-colors text-2xl cursor-pointer"
-              >
-                &times;
-              </button>
+            &times;
+          </button>
+        </div>
+
+        {/* Route Info */}
+        <div className="mb-8">
+          <InfoSection title="Información de Ubicación y Rutas">
+            <div className={
+              student.location.morning.lat && student.location.afternoon.lat
+                ? "grid grid-cols-1 md:grid-cols-2 gap-8"
+                : "flex justify-center"
+            }>
+              {student.location.morning.lat && <div>
+                <h4 className="font-semibold text-lg text-gray-700 mb-2">
+                  Ubicación de Mañana
+                </h4>
+                <RouteAssignmentStatus
+                  assignedRoute={student.routes?.find(route => route.period === 'morning')}
+                />
+                <AddressInfo address={student.streetInfo.morning} />
+              </div>}
+              {student.location.afternoon.lat && <div>
+                <h4 className="font-semibold text-lg text-gray-700 mb-2">
+                  Ubicación de Tarde
+                </h4>
+                <RouteAssignmentStatus
+                  assignedRoute={student.routes?.find(route => route.period === 'afternoon')}
+                />
+                <AddressInfo address={student.streetInfo.afternoon} />
+              </div>}
             </div>
+          </InfoSection>
+        </div>
 
-            {/* Route Info */}
-            <div className="mb-8">
-              <InfoSection title="Información de Ubicación y Rutas">
-                <div className={
-                  student.location.morning.lat && student.location.afternoon.lat
-                    ? "grid grid-cols-1 md:grid-cols-2 gap-8"
-                    : "flex justify-center"
-                }>
-                  {student.location.morning.lat && <div>
-                    <h4 className="font-semibold text-lg text-gray-700 mb-2">
-                      Ubicación de Mañana
-                    </h4>
-                    <RouteAssignmentStatus
-                      assignedRoute={student.route?.morning}
-                    />
-                    <AddressInfo address={student.streetInfo.morning} />
-                  </div>}
-                  {student.location.afternoon.lat && <div>
-                    <h4 className="font-semibold text-lg text-gray-700 mb-2">
-                      Ubicación de Tarde
-                    </h4>
-                    <RouteAssignmentStatus
-                      assignedRoute={student.route?.afternoon}
-                    />
-                    <AddressInfo address={student.streetInfo.afternoon} />
-                  </div>}
-                </div>
-              </InfoSection>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Student & Contact Info */}
+          <div className="space-y-6">
+            <InfoSection title="Información del Estudiante">
+              <InfoItem label="Grado" value={student.grade} />
+              <InfoItem
+                label="Documento"
+                value={`${student.documentType} ${student.documentNumber}`}
+              />
+              <InfoItem label="Email" value={student.email} />
+              <InfoItem
+                label="Estudiante Nuevo"
+                value={student.isNewStudent ? "Sí" : "No"}
+              />
+            </InfoSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Student & Contact Info */}
-              <div className="space-y-6">
-                <InfoSection title="Información del Estudiante">
-                  <InfoItem label="Grado" value={student.grade} />
-                  <InfoItem
-                    label="Documento"
-                    value={`${student.documentType} ${student.documentNumber}`}
-                  />
-                  <InfoItem label="Email" value={student.email} />
-                  <InfoItem
-                    label="Estudiante Nuevo"
-                    value={student.isNewStudent ? "Sí" : "No"}
-                  />
-                </InfoSection>
+            <InfoSection title="Información de Contacto">
+              <InfoItem
+                label="Teléfono Principal"
+                value={student.parentPhone}
+              />
+              {student.secondaryPhone && (
+                <InfoItem
+                  label="Teléfono Secundario"
+                  value={student.secondaryPhone}
+                />
+              )}
+              {student.housePhone && (
+                <InfoItem
+                  label="Teléfono Convencional"
+                  value={student.housePhone}
+                />
+              )}
+            </InfoSection>
+          </div>
 
-                <InfoSection title="Información de Contacto">
-                  <InfoItem
-                    label="Teléfono Principal"
-                    value={student.parentPhone}
-                  />
-                  {student.secondaryPhone && (
-                    <InfoItem
-                      label="Teléfono Secundario"
-                      value={student.secondaryPhone}
-                    />
-                  )}
-                  {student.housePhone && (
-                    <InfoItem
-                      label="Teléfono Convencional"
-                      value={student.housePhone}
-                    />
-                  )}
-                </InfoSection>
-              </div>
-
-              {/* Billing Info */}
-              <div className="space-y-6">
-                <InfoSection title="Información de Facturación">
-                  <InfoItem
-                    label="Nombre"
-                    value={`${student.billingInfo.name} ${student.billingInfo.surname}`}
-                  />
-                  <InfoItem
-                    label="Documento"
-                    value={`${student.billingInfo.documentType} ${student.billingInfo.documentNumber}`}
-                  />
-                  <InfoItem label="Email" value={student.billingInfo.email} />
-                  <InfoItem label="Teléfono" value={student.billingInfo.phone} />
-                  <InfoItem
-                    label="Dirección"
-                    value={student.billingInfo.address}
-                  />
-                </InfoSection>
-              </div>
-            </div>
-
-            {/* Additional Info */}
-            {student.additionalInfo && (
-              <div className="mt-8">
-                <InfoSection title="Información Adicional">
-                  <p className="text-gray-700 bg-gray-50 p-4 rounded-md">
-                    {student.additionalInfo}
-                  </p>
-                </InfoSection>
-              </div>
-            )}
-
-            <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={closeModal}
-                className="px-6 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700 transition cursor-pointer"
-              >
-                Cerrar
-              </button>
-            </div>
+          {/* Billing Info */}
+          <div className="space-y-6">
+            <InfoSection title="Información de Facturación">
+              <InfoItem
+                label="Nombre"
+                value={`${student.billingInfo.name} ${student.billingInfo.surname}`}
+              />
+              <InfoItem
+                label="Documento"
+                value={`${student.billingInfo.documentType} ${student.billingInfo.documentNumber}`}
+              />
+              <InfoItem label="Email" value={student.billingInfo.email} />
+              <InfoItem label="Teléfono" value={student.billingInfo.phone} />
+              <InfoItem
+                label="Dirección"
+                value={student.billingInfo.address}
+              />
+            </InfoSection>
           </div>
         </div>
-      )}
-    </>
+
+        {/* Additional Info */}
+        {student.additionalInfo && (
+          <div className="mt-8">
+            <InfoSection title="Información Adicional">
+              <p className="text-gray-700 bg-gray-50 p-4 rounded-md">
+                {student.additionalInfo}
+              </p>
+            </InfoSection>
+          </div>
+        )}
+
+        <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
+          <button
+            onClick={closeModal}
+            className="px-6 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700 transition cursor-pointer"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -203,13 +187,14 @@ const AddressInfo = ({
   </div>
 );
 
-const RouteAssignmentStatus = ({ assignedRoute }: { assignedRoute: string | undefined }) => (
+const RouteAssignmentStatus = ({ assignedRoute }: { assignedRoute: RouteAttr | undefined }) => (
   <div
-    className={`p-3 rounded-lg text-center mb-3 text-sm font-bold ${assignedRoute && assignedRoute !== ""
+    className={`p-3 rounded-lg text-center mb-3 text-sm font-bold ${assignedRoute
       ? "bg-green-100 text-green-800"
       : "bg-yellow-100 text-yellow-800"
       }`}
   >
-    {(assignedRoute && assignedRoute !== "") ? assignedRoute.toUpperCase() : "SIN RUTA ASIGNADA"}
+    {/* {(assignedRoute && assignedRoute !== "") ? assignedRoute.toUpperCase() : "SIN RUTA ASIGNADA"} */}
+    {assignedRoute?.name.toUpperCase() ?? "SIN RUTA ASIGNADA"}
   </div>
 );

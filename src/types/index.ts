@@ -41,10 +41,7 @@ export type Student = {
     morning: Coordinates;
     afternoon: Coordinates;
   };
-  route?: {
-    morning: string;
-    afternoon: string;
-  }
+  routes?: RouteAttr[];
 };
 
 export type Address = {
@@ -67,4 +64,10 @@ export type BillingInfo = {
 export type Coordinates = {
   lat: string;
   lng: string;
+};
+
+export type RouteAttr = {
+  name: string;
+  period: 'morning' | 'afternoon';
+  color: string;
 };
