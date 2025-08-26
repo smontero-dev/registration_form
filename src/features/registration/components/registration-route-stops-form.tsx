@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegistrationStore } from "@/app/registration/store";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Markers } from "@/types";
+import { CustomMarkers } from "@/types";
 
 const registrationRouteStopsSchema = registrationSchema.pick({
   location: true,
@@ -37,7 +37,7 @@ export default function RegistrationRouteStopsForm() {
     []
   );
 
-  const [markers, setMarkers] = useState<Markers>({
+  const [markers, setMarkers] = useState<CustomMarkers>({
     morning: null,
     afternoon: null,
     common: null,
@@ -92,7 +92,7 @@ export default function RegistrationRouteStopsForm() {
           if (field === "location") {
             const storedLocation =
               value as RegistrationRouteStopsSchema["location"];
-            let storedMarkers: Markers;
+            let storedMarkers: CustomMarkers;
             if (
               storedLocation.morning !== undefined &&
               storedLocation.afternoon !== undefined &&
@@ -121,17 +121,17 @@ export default function RegistrationRouteStopsForm() {
               storedMarkers = {
                 morning: storedLocation.morning
                   ? {
-                      latlng: storedLocation.morning,
-                      color: "#FFC107",
-                      popupContent: "Parada de la Mañana",
-                    }
+                    latlng: storedLocation.morning,
+                    color: "#FFC107",
+                    popupContent: "Parada de la Mañana",
+                  }
                   : null,
                 afternoon: storedLocation.afternoon
                   ? {
-                      latlng: storedLocation.afternoon,
-                      color: "#3B82F6",
-                      popupContent: "Parada de la Tarde",
-                    }
+                    latlng: storedLocation.afternoon,
+                    color: "#3B82F6",
+                    popupContent: "Parada de la Tarde",
+                  }
                   : null,
                 common: null,
               };
@@ -165,17 +165,17 @@ export default function RegistrationRouteStopsForm() {
         ...prev,
         afternoon: prev.morning
           ? {
-              ...prev.morning,
-              color: "#3B82F6",
-              popupContent: "Parada de la Tarde",
-            }
+            ...prev.morning,
+            color: "#3B82F6",
+            popupContent: "Parada de la Tarde",
+          }
           : null,
         common: prev.morning
           ? {
-              ...prev.morning,
-              color: "#8B5CF6",
-              popupContent: "Parada de la Mañana y Tarde",
-            }
+            ...prev.morning,
+            color: "#8B5CF6",
+            popupContent: "Parada de la Mañana y Tarde",
+          }
           : null,
       }));
       if (activeMarkerType === "afternoon") {
@@ -223,9 +223,8 @@ export default function RegistrationRouteStopsForm() {
     const newMarker = {
       latlng: { lat, lng },
       color: activeMarkerType === "morning" ? "#FFC107" : "#3B82F6",
-      popupContent: `Parada de la ${
-        activeMarkerType === "morning" ? "Mañana" : "Tarde"
-      }`,
+      popupContent: `Parada de la ${activeMarkerType === "morning" ? "Mañana" : "Tarde"
+        }`,
     };
 
     setMarkers((prev) => ({
@@ -277,11 +276,10 @@ export default function RegistrationRouteStopsForm() {
             <button
               type="button"
               onClick={() => setActiveMarkerType("morning")}
-              className={`px-4 py-2 rounded-md flex items-center ${
-                activeMarkerType === "morning"
+              className={`px-4 py-2 rounded-md flex items-center ${activeMarkerType === "morning"
                   ? "bg-yellow-100 border-2 border-yellow-400 text-yellow-700"
                   : "bg-gray-100 text-gray-700"
-              }`}
+                }`}
             >
               <span className="mr-2">🌅</span>
               Parada de la Mañana
@@ -291,11 +289,10 @@ export default function RegistrationRouteStopsForm() {
               type="button"
               onClick={() => setActiveMarkerType("afternoon")}
               disabled={useSameLocation}
-              className={`px-4 py-2 rounded-md flex items-center ${
-                activeMarkerType === "afternoon"
+              className={`px-4 py-2 rounded-md flex items-center ${activeMarkerType === "afternoon"
                   ? "bg-blue-100 border-2 border-blue-400 text-blue-700"
                   : "bg-gray-100 text-gray-700"
-              } ${useSameLocation ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${useSameLocation ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <span className="mr-2">🌆</span>
               Parada de la Tarde
@@ -327,17 +324,15 @@ export default function RegistrationRouteStopsForm() {
 
           {/* Instructions */}
           <div
-            className={`border-l-4 p-4 rounded-md mb-4 shadow-sm flex items-start ${
-              !activeMarkerType
+            className={`border-l-4 p-4 rounded-md mb-4 shadow-sm flex items-start ${!activeMarkerType
                 ? "bg-orange-50 border-orange-400 text-orange-800"
                 : "bg-teal-50 border-teal-500 text-teal-800"
-            }`}
+              }`}
           >
             <div className="flex-shrink-0">
               <svg
-                className={`h-5 w-5 ${
-                  !activeMarkerType ? "text-orange-400" : "text-teal-500"
-                }`}
+                className={`h-5 w-5 ${!activeMarkerType ? "text-orange-400" : "text-teal-500"
+                  }`}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
@@ -406,11 +401,10 @@ export default function RegistrationRouteStopsForm() {
           {/* Selected locations display */}
           <div className="grid md:grid-cols-2 gap-4 mt-6">
             <div
-              className={`p-4 rounded-md transition-all shadow-sm ${
-                markers.morning
+              className={`p-4 rounded-md transition-all shadow-sm ${markers.morning
                   ? "bg-yellow-50 border border-yellow-200"
                   : "bg-gray-50 border border-gray-200"
-              }`}
+                }`}
             >
               <h4 className="font-medium flex items-center mb-3 text-yellow-800">
                 <span className="mr-2">🌅</span> Parada de la Mañana
@@ -499,11 +493,10 @@ export default function RegistrationRouteStopsForm() {
                         <input
                           type="text"
                           {...register("streetInfo.morning.mainStreet")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                            errors.streetInfo?.morning?.mainStreet
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.morning?.mainStreet
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
-                          }`}
+                            }`}
                           placeholder="Ej: Av. 9 de Octubre y Boyacá"
                         />
                       </div>
@@ -558,11 +551,10 @@ export default function RegistrationRouteStopsForm() {
                         <input
                           type="text"
                           {...register("streetInfo.morning.neighborhood")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                            errors.streetInfo?.morning?.neighborhood
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.morning?.neighborhood
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
-                          }`}
+                            }`}
                           placeholder="Ej: Kennedy Norte"
                         />
                       </div>
@@ -594,11 +586,10 @@ export default function RegistrationRouteStopsForm() {
                         <input
                           type="text"
                           {...register("streetInfo.morning.referencePoints")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                            errors.streetInfo?.morning?.referencePoints
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.morning?.referencePoints
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
-                          }`}
+                            }`}
                           placeholder="Ej: Cerca del parque Kennedy, frente al Banco Pichincha"
                         />
                       </div>
@@ -616,11 +607,10 @@ export default function RegistrationRouteStopsForm() {
             </div>
 
             <div
-              className={`p-4 rounded-md transition-all shadow-sm ${
-                markers.afternoon
+              className={`p-4 rounded-md transition-all shadow-sm ${markers.afternoon
                   ? "bg-blue-50 border border-blue-200"
                   : "bg-gray-50 border border-gray-200"
-              }`}
+                }`}
             >
               <h4 className="font-medium flex items-center mb-3 text-blue-800">
                 <span className="mr-2">🌆</span> Parada de la Tarde
@@ -709,15 +699,13 @@ export default function RegistrationRouteStopsForm() {
                         <input
                           type="text"
                           {...register("streetInfo.afternoon.mainStreet")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                            errors.streetInfo?.afternoon?.mainStreet
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.afternoon?.mainStreet
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
-                          } ${
-                            useSameLocation
+                            } ${useSameLocation
                               ? "opacity-50 cursor-not-allowed"
                               : ""
-                          }`}
+                            }`}
                           disabled={useSameLocation}
                           placeholder="Ej: Av. 9 de Octubre y Boyacá"
                         />
@@ -746,11 +734,10 @@ export default function RegistrationRouteStopsForm() {
                         <input
                           type="text"
                           {...register("streetInfo.afternoon.secondaryStreet")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                            useSameLocation
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${useSameLocation
                               ? "opacity-50 cursor-not-allowed"
                               : ""
-                          }`}
+                            }`}
                           disabled={useSameLocation}
                           placeholder="Ej: Edificio Torres del Sol, Piso 5, Apto 502"
                         />
@@ -778,15 +765,13 @@ export default function RegistrationRouteStopsForm() {
                         <input
                           type="text"
                           {...register("streetInfo.afternoon.neighborhood")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                            errors.streetInfo?.afternoon?.neighborhood
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.afternoon?.neighborhood
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
-                          } ${
-                            useSameLocation
+                            } ${useSameLocation
                               ? "opacity-50 cursor-not-allowed"
                               : ""
-                          }`}
+                            }`}
                           disabled={useSameLocation}
                           placeholder="Ej: Kennedy Norte"
                         />
@@ -819,15 +804,13 @@ export default function RegistrationRouteStopsForm() {
                         <input
                           type="text"
                           {...register("streetInfo.afternoon.referencePoints")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${
-                            errors.streetInfo?.afternoon?.referencePoints
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.afternoon?.referencePoints
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
-                          } ${
-                            useSameLocation
+                            } ${useSameLocation
                               ? "opacity-50 cursor-not-allowed"
                               : ""
-                          }`}
+                            }`}
                           disabled={useSameLocation}
                           placeholder="Ej: Cerca del parque Kennedy, frente al Banco Pichincha"
                         />
