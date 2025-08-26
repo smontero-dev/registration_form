@@ -1,6 +1,6 @@
 "use client";
 
-import SearchBox from "@/features/admin/components/SearchBox";
+import FiltersSection from "@/features/admin/components/FiltersSection";
 import StudentList from "@/features/admin/components/StudentList";
 import { fetchAllStudents } from "@/services/studentService";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 
 export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showNewStudentsOnly, setShowNewStudentsOnly] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["students"],
@@ -24,14 +25,26 @@ export default function AdminPage() {
   });
 
   const filteredStudents = useMemo(() => {
-    if (!data?.students || !searchTerm.trim()) return data?.students ?? [];
+    if (!data?.students) return [];
 
-    return data.students.filter((student) => {
-      const fullName =
-        `${student.studentName} ${student.studentSurname}`.toLowerCase();
-      return fullName.includes(searchTerm.trim().toLowerCase());
-    });
-  }, [data?.students, searchTerm]);
+    let filtered = data.students;
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = filtered.filter((student) => {
+        const fullName =
+          `${student.studentName} ${student.studentSurname}`.toLowerCase();
+        return fullName.includes(searchTerm.trim().toLowerCase());
+      });
+    }
+
+    // Filter by new students only
+    if (showNewStudentsOnly) {
+      filtered = filtered.filter((student) => student.isNewStudent);
+    }
+
+    return filtered;
+  }, [data?.students, searchTerm, showNewStudentsOnly]);
 
   return (
     <div className="h-full flex">
@@ -41,10 +54,11 @@ export default function AdminPage() {
         </div>
       </div>
       <div className="w-[30%] h-full border-l flex flex-col">
-        <SearchBox
-          query={searchTerm}
-          onQueryChange={setSearchTerm}
-          placeholder="Buscar estudiantes..."
+        <FiltersSection
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          showNewStudentsOnly={showNewStudentsOnly}
+          setShowNewStudentsOnly={setShowNewStudentsOnly}
         />
         <div className="flex-1 overflow-y-auto">
           {error ? (
