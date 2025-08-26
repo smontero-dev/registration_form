@@ -1,4 +1,4 @@
-export type Markers = {
+export type CustomMarkers = {
   morning: {
     latlng: { lat: number; lng: number };
     color: string;
@@ -68,6 +68,14 @@ export type Coordinates = {
 
 export type RouteAttr = {
   name: string;
-  period: 'morning' | 'afternoon';
+  period: "morning" | "afternoon";
   color: string;
+};
+
+export type Marker = {
+  id?: string;
+  lat: number;
+  lng: number;
+  color: string;
+  popupContent: React.ReactNode;
 };

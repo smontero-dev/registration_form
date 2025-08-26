@@ -8,7 +8,10 @@ type StudentInfoProps = {
   onCloseModal: () => void;
 };
 
-export default function StudentInfo({ student, onCloseModal }: StudentInfoProps) {
+export default function StudentInfo({
+  student,
+  onCloseModal,
+}: StudentInfoProps) {
   const closeModal = () => onCloseModal();
 
   const stopPropagation = (e: React.MouseEvent) => {
@@ -17,7 +20,7 @@ export default function StudentInfo({ student, onCloseModal }: StudentInfoProps)
 
   return (
     <div
-      className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[1000] p-4"
       onClick={closeModal}
     >
       <div
@@ -26,7 +29,8 @@ export default function StudentInfo({ student, onCloseModal }: StudentInfoProps)
       >
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-3xl font-bold text-gray-800">
-            {titleCase(student.studentName.trim().toLowerCase())} {titleCase(student.studentSurname.trim().toLowerCase())}
+            {titleCase(student.studentName.trim().toLowerCase())}{" "}
+            {titleCase(student.studentSurname.trim().toLowerCase())}
           </h2>
           <button
             onClick={closeModal}
@@ -39,29 +43,39 @@ export default function StudentInfo({ student, onCloseModal }: StudentInfoProps)
         {/* Route Info */}
         <div className="mb-8">
           <InfoSection title="Información de Ubicación y Rutas">
-            <div className={
-              student.location.morning.lat && student.location.afternoon.lat
-                ? "grid grid-cols-1 md:grid-cols-2 gap-8"
-                : "flex justify-center"
-            }>
-              {student.location.morning.lat && <div>
-                <h4 className="font-semibold text-lg text-gray-700 mb-2">
-                  Ubicación de Mañana
-                </h4>
-                <RouteAssignmentStatus
-                  assignedRoute={student.routes?.find(route => route.period === 'morning')}
-                />
-                <AddressInfo address={student.streetInfo.morning} />
-              </div>}
-              {student.location.afternoon.lat && <div>
-                <h4 className="font-semibold text-lg text-gray-700 mb-2">
-                  Ubicación de Tarde
-                </h4>
-                <RouteAssignmentStatus
-                  assignedRoute={student.routes?.find(route => route.period === 'afternoon')}
-                />
-                <AddressInfo address={student.streetInfo.afternoon} />
-              </div>}
+            <div
+              className={
+                student.location.morning.lat && student.location.afternoon.lat
+                  ? "grid grid-cols-1 md:grid-cols-2 gap-8"
+                  : "flex justify-center"
+              }
+            >
+              {student.location.morning.lat && (
+                <div>
+                  <h4 className="font-semibold text-lg text-gray-700 mb-2">
+                    Ubicación de Mañana
+                  </h4>
+                  <RouteAssignmentStatus
+                    assignedRoute={student.routes?.find(
+                      (route) => route.period === "morning"
+                    )}
+                  />
+                  <AddressInfo address={student.streetInfo.morning} />
+                </div>
+              )}
+              {student.location.afternoon.lat && (
+                <div>
+                  <h4 className="font-semibold text-lg text-gray-700 mb-2">
+                    Ubicación de Tarde
+                  </h4>
+                  <RouteAssignmentStatus
+                    assignedRoute={student.routes?.find(
+                      (route) => route.period === "afternoon"
+                    )}
+                  />
+                  <AddressInfo address={student.streetInfo.afternoon} />
+                </div>
+              )}
             </div>
           </InfoSection>
         </div>
@@ -115,10 +129,7 @@ export default function StudentInfo({ student, onCloseModal }: StudentInfoProps)
               />
               <InfoItem label="Email" value={student.billingInfo.email} />
               <InfoItem label="Teléfono" value={student.billingInfo.phone} />
-              <InfoItem
-                label="Dirección"
-                value={student.billingInfo.address}
-              />
+              <InfoItem label="Dirección" value={student.billingInfo.address} />
             </InfoSection>
           </div>
         </div>
@@ -187,12 +198,17 @@ const AddressInfo = ({
   </div>
 );
 
-const RouteAssignmentStatus = ({ assignedRoute }: { assignedRoute: RouteAttr | undefined }) => (
+const RouteAssignmentStatus = ({
+  assignedRoute,
+}: {
+  assignedRoute: RouteAttr | undefined;
+}) => (
   <div
-    className={`p-3 rounded-lg text-center mb-3 text-sm font-bold ${assignedRoute
-      ? "bg-green-100 text-green-800"
-      : "bg-yellow-100 text-yellow-800"
-      }`}
+    className={`p-3 rounded-lg text-center mb-3 text-sm font-bold ${
+      assignedRoute
+        ? "bg-green-100 text-green-800"
+        : "bg-yellow-100 text-yellow-800"
+    }`}
   >
     {/* {(assignedRoute && assignedRoute !== "") ? assignedRoute.toUpperCase() : "SIN RUTA ASIGNADA"} */}
     {assignedRoute?.name.toUpperCase() ?? "SIN RUTA ASIGNADA"}

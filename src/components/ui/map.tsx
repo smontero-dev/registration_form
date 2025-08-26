@@ -7,7 +7,7 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { Markers } from "@/types";
+import { CustomMarkers } from "@/types";
 import * as L from "leaflet";
 import { useEffect } from "react";
 
@@ -18,12 +18,12 @@ import { LocateControl } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 
 type MapProps = {
-  markers: Markers;
+  markers: CustomMarkers;
   onMapClick: (lat: number, lng: number) => void;
 };
 
 type LocationMarkersProps = {
-  markers: Markers;
+  markers: CustomMarkers;
 };
 
 type OnMapClickProps = {
