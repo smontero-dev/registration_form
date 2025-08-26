@@ -20,10 +20,28 @@ export default function StudentRow({ student, openModal }: StudentRowProps) {
         <div className="flex-1">
           <div className="flex items-center space-x-3">
             <div className="flex-1">
-              <p className="font-semibold text-gray-800 group-hover:text-blue-800 transition-colors">
-                {titleCase(student.studentSurname.trim().toLowerCase())},{" "}
-                {titleCase(student.studentName.trim().toLowerCase())}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-gray-800 group-hover:text-blue-800 transition-colors">
+                  {titleCase(student.studentSurname.trim().toLowerCase())},{" "}
+                  {titleCase(student.studentName.trim().toLowerCase())}
+                </p>
+                {student.isNewStudent && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                    <svg
+                      className="w-3 h-3 mr-1"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Nuevo
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 mt-1">
                 {hasRoutes ? (
                   student.routes!.map((route, index) => (
