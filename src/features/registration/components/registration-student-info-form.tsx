@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useRegistrationStore } from "@/app/registration/store";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { titleCase } from "title-case";
 
 const registrationStudentInfoSchema = registrationSchema.pick({
   email: true,
@@ -60,7 +61,13 @@ export default function RegistrationStudentInfoForm() {
   const router = useRouter();
 
   const onSubmit = (data: RegistrationStudentInfoSchema) => {
-    setData(data);
+    const formattedData: RegistrationStudentInfoSchema = {
+      ...data,
+      studentName: titleCase(data.studentName.trim().toLowerCase()),
+      studentSurname: titleCase(data.studentSurname.trim().toLowerCase()),
+      email: data.email.trim(),
+    };
+    setData(formattedData);
     reset();
     router.push("/registration/route-stops");
   };
