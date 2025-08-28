@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useRegistrationStore } from "@/app/registration/store";
 import { useCallback, useEffect } from "react";
+import { titleCase } from "title-case";
 
 const registrationBillingInfoSchema = registrationSchema.pick({
   billingInfo: true,
@@ -67,7 +68,18 @@ export default function RegistrationBillingInfoForm() {
   };
 
   const onSubmit = (data: RegistrationBillingInfoSchema) => {
-    setData(data);
+    const formattedData: RegistrationBillingInfoSchema = {
+      billingInfo: {
+        address: data.billingInfo.address.trim(),
+        documentNumber: data.billingInfo.documentNumber.trim(),
+        documentType: data.billingInfo.documentType,
+        email: data.billingInfo.email.trim(),
+        name: titleCase(data.billingInfo.name.trim().toLowerCase()),
+        phone: data.billingInfo.phone.trim(),
+        surname: titleCase(data.billingInfo.surname.trim().toLowerCase()),
+      },
+    };
+    setData(formattedData);
     reset();
     router.push("/registration/contract-signing");
   };
