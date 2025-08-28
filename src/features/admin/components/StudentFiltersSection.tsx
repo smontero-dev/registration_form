@@ -1,6 +1,6 @@
 "use client";
 
-import SearchBox from "./SearchBox";
+import SearchBox from "../../../components/ui/SearchBox";
 
 type FiltersSectionProps = {
   searchTerm: string;

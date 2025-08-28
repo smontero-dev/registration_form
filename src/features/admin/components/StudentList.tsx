@@ -5,7 +5,6 @@ import StudentInfo from "./StudentInfo";
 import StudentRow from "./StudentRow";
 import { Student } from "@/types";
 import { useState, useRef } from "react";
-import StudentListHeader from "./StudentListHeader";
 import AutoSizer from "react-virtualized-auto-sizer";
 
 type StudentListProps = {
@@ -83,8 +82,6 @@ export default function StudentList({ students, isLoading }: StudentListProps) {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      <StudentListHeader students={students} />
-
       {/* Student List */}
       <div className="flex-1 overflow-hidden relative">
         <AutoSizer>

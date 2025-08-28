@@ -25,7 +25,7 @@ export default function MapSection({
             dynamic(() => import("@/components/ui/raw_map"), {
                 loading: () => {
                     return (
-                        <div className="w-full h-96 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
+                        <div className="w-full h-full bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
                             <p className="text-gray-500">Cargando mapa...</p>
                         </div>
                     );
