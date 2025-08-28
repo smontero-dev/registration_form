@@ -67,6 +67,7 @@ export type Coordinates = {
 };
 
 export type RouteAttr = {
+  id?: string;
   name: string;
   period: "morning" | "afternoon";
   color: string;
