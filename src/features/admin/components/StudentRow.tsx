@@ -78,13 +78,10 @@ export default function StudentRow({ student, openModal }: StudentRowProps) {
 }
 
 const RouteBadge = ({ route }: { route: RouteAttr }) => {
-  const getRouteColor = () => {
-    return `bg-blue-100 text-blue-800 border-blue-200`;
-  };
-
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getRouteColor()}`}
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border bg-white`}
+      style={{ color: route.color, borderColor: route.color }}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-60"></span>
       {route.name} - {route.period}
