@@ -84,7 +84,7 @@ const RouteBadge = ({ route }: { route: RouteAttr }) => {
       style={{ color: route.color, borderColor: route.color }}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-60"></span>
-      {route.name} - {route.period}
+      {route.name} - {route.period === "morning" ? "MAÑANA" : "TARDE"}
     </span>
   );
 };
