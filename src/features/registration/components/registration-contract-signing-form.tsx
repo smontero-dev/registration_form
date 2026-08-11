@@ -7,19 +7,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegistrationStore } from "@/app/registration/store";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isFinalYearGrade } from "@/features/registration/utils/contractUtils";
+import FinalYearContractTemplate from "@/components/final-year-contract-template";
 import ContractTemplate from "@/components/contract-template";
 import { pdf, usePDF } from "@react-pdf/renderer";
 import PdfViewer from "@/components/ui/pdf-viewer";
 import SignaturePad from "react-signature-pad-wrapper";
-import {
-  addRegistration,
-  uploadContract,
-} from "@/services/registrationService";
+import { uploadContract } from "@/services/registrationService";
 import SuccessModal from "@/components/ui/SuccessModal";
 import axios from "axios";
 
 const registrationContractSigningSchema = registrationSchema.pick({
-  price: true,
   signatureType: true,
 });
 
@@ -42,7 +40,6 @@ export default function RegistrationContractSigningForm() {
     handleSubmit,
     watch,
     setValue,
-    register,
     reset,
     formState: { errors },
   } = useForm<RegistrationContractSigningSchema>({
@@ -54,19 +51,23 @@ export default function RegistrationContractSigningForm() {
   });
 
   const signatureType = watch("signatureType");
-  const price = watch("price");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { setData, ...storedData } = useRegistrationStore.getState();
+  const isFinalYear = isFinalYearGrade(storedData.grade);
+  const SelectedContractTemplate = isFinalYear
+    ? FinalYearContractTemplate
+    : ContractTemplate;
 
   const [contractPDF] = usePDF({
     document: (
-      <ContractTemplate
+      <SelectedContractTemplate
         name={storedData.name}
         surname={storedData.surname}
         documentNumber={storedData.documentNumber}
         parentName={storedData.billingInfo?.name}
         parentSurname={storedData.billingInfo?.surname}
         parentDocumentNumber={storedData.billingInfo?.documentNumber}
+        monthlyCost={storedData.price}
       />
     ),
   });
@@ -99,27 +100,30 @@ export default function RegistrationContractSigningForm() {
     router.push("/registration/billing-info");
   };
 
-  const onSubmit = async (data: RegistrationContractSigningSchema) => {
+  const onSubmit = async () => {
     setIsSubmitting(true);
     setApiError(null);
-    const finalData = {
-      ...storedData,
-      ...data,
-    };
 
     try {
-      const response = await addRegistration(finalData);
-      const { documentNumber, schoolYear } = response;
+      const documentNumber =
+        storedData.documentNumber ||
+        storedData.billingInfo?.documentNumber ||
+        "";
+      const schoolYear = storedData.schoolYear || "2025-2026";
+
+      if (!documentNumber) {
+        throw new Error("No document number found for registration.");
+      }
 
       const signedContractPDF = (
-        <ContractTemplate
-          name={finalData.name}
-          surname={finalData.surname}
-          documentNumber={finalData.documentNumber}
-          parentName={finalData.billingInfo?.name}
-          parentSurname={finalData.billingInfo?.surname}
-          parentDocumentNumber={finalData.billingInfo?.documentNumber}
-          monthlyCost={price}
+        <SelectedContractTemplate
+          name={storedData.name}
+          surname={storedData.surname}
+          documentNumber={storedData.documentNumber}
+          parentName={storedData.billingInfo?.name}
+          parentSurname={storedData.billingInfo?.surname}
+          parentDocumentNumber={storedData.billingInfo?.documentNumber}
+          monthlyCost={storedData.price}
           signature={signature}
         />
       );
@@ -130,36 +134,28 @@ export default function RegistrationContractSigningForm() {
       }
 
       setSignedContract(contractBlob);
-      const generatedFilename = `${finalData.surname?.replaceAll(
+      const generatedFilename = `${(storedData.surname || "").replaceAll(
         " ",
         "_"
-      )}_${finalData.name?.replaceAll(" ", "_")}_Contrato.pdf`;
+      )}_${(storedData.name || "").replaceAll(" ", "_")}_Contrato.pdf`;
       setFilename(generatedFilename);
       await uploadContract(documentNumber, schoolYear, contractBlob);
       setIsModalOpen(true);
       useRegistrationStore.persist.clearStorage();
       reset();
     } catch (error) {
-      console.error("Error during registration process:", error);
+      console.error("Error during contract upload process:", error);
       if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
         const responseData = error.response?.data;
         const serverMessage =
           typeof responseData === "string"
             ? responseData
             : responseData?.message || responseData?.error || "";
 
-        if (
-          status === 400 &&
-          typeof serverMessage === "string" &&
-          serverMessage.startsWith("Form already exists")
-        ) {
+        if (error.response) {
           setApiError(
-            "Ya existe un registro para este estudiante en este año lectivo. Si necesita editar la información, por favor diríjase a la oficina de transporte escolar."
-          );
-        } else if (error.response) {
-          setApiError(
-            "No se pudo completar el registro debido a un problema en el servidor. Por favor, verifique sus datos o intente nuevamente más tarde."
+            serverMessage ||
+              "No se pudo completar la carga del contrato debido a un problema en el servidor. Por favor, intente nuevamente."
           );
         } else {
           setApiError(
@@ -322,50 +318,20 @@ export default function RegistrationContractSigningForm() {
             )}
             {contractPDF.url && <PdfViewer file={contractPDF.url} />}
 
-            {/* Price Input Field */}
-            {storedData && !storedData.isNewStudent && (
+            {/* Read-Only Price Summary Badge */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Precio del Servicio de Transporte (mismo valor del año
-                  anterior) *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    {...register("price", {
-                      valueAsNumber: true,
-                    })}
-                    className={`block w-full pl-7 pr-20 py-2 border ${
-                      errors.price
-                        ? "border-red-300 ring-1 ring-red-500"
-                        : "border-gray-300"
-                    } rounded-md bg-white focus:outline-none focus:ring-2 ${
-                      errors.price
-                        ? "focus:ring-red-500 focus:border-red-500"
-                        : "focus:ring-blue-500 focus:border-blue-500"
-                    }`}
-                    placeholder="0.00"
-                    step="0.01"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">USD/mes</span>
-                  </div>
-                </div>
-                {errors.price ? (
-                  <p className="text-sm text-red-600 mt-1">
-                    {errors.price.message ||
-                      "Por favor ingrese un valor válido"}
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-500 mt-1">
-                    Ingrese el precio acordado para los servicios de transporte.
-                  </p>
-                )}
+                <span className="block text-xs font-semibold uppercase tracking-wider text-blue-700">
+                  Tarifa del Servicio Asignada
+                </span>
+                <span className="text-sm text-blue-900 font-medium">
+                  Valor mensual acordado para el servicio de transporte
+                </span>
               </div>
-            )}
+              <div className="bg-blue-600 text-white font-bold text-lg px-4 py-2 rounded-md shadow-sm whitespace-nowrap">
+                ${Number(storedData.price || 0).toFixed(2)} USD/mes
+              </div>
+            </div>
 
             {/* Signature Pad */}
             <div>
