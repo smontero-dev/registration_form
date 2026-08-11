@@ -29,7 +29,7 @@ export const fetchStudentProfileByDocument = async (
 ): Promise<StudentProfileResponse> => {
   try {
     const response: StudentProfileResponse = await apiClient.get(
-      `/students/profile/${documentNumber}`
+      `/students/${documentNumber}/status`
     );
     return response;
   } catch (error) {

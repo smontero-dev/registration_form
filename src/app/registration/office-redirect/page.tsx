@@ -69,12 +69,12 @@ export default function OfficeRedirectPage() {
       </div>
 
       <div className="pt-4">
-        <Link
+        <a
           href="/"
           className="inline-block px-8 py-3 bg-[#1e213a] text-white font-medium rounded-lg hover:bg-[#2a2d4a] transition-all"
         >
           Volver al Inicio
-        </Link>
+        </a>
       </div>
     </div>
   );

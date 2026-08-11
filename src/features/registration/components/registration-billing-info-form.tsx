@@ -88,9 +88,19 @@ export default function RegistrationBillingInfoForm() {
     };
 
     const storedData = useRegistrationStore.getState();
+    const isExistingWithPrice =
+      !storedData.isNewStudent &&
+      Boolean(storedData.price) &&
+      Number(storedData.price) > 0;
+
+    const signatureType = isExistingWithPrice
+      ? "ONLINE_SIGNATURE"
+      : "TO_BE_SIGNED_IN_PERSON";
+
     const finalData = {
       ...storedData,
       ...formattedBillingInfo,
+      signatureType,
     };
 
     try {
@@ -99,13 +109,9 @@ export default function RegistrationBillingInfoForm() {
         ...formattedBillingInfo,
         documentNumber: response.documentNumber || finalData.documentNumber,
         schoolYear: response.schoolYear,
+        signatureType,
       });
       reset();
-
-      const isExistingWithPrice =
-        !finalData.isNewStudent &&
-        Boolean(finalData.price) &&
-        Number(finalData.price) > 0;
 
       if (isExistingWithPrice) {
         router.push("/registration/contract-signing");

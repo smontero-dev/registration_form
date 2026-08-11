@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRegistrationStore } from "@/app/registration/store";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { titleCase } from "title-case";
 import { fetchStudentProfileByDocument } from "@/services/studentService";
 
@@ -42,10 +42,10 @@ export default function RegistrationStudentInfoForm() {
     },
   });
 
-  const { setData, ...storedData } = useRegistrationStore((state) => state);
+  const setData = useRegistrationStore((state) => state.setData);
 
-  useEffect(() => {
-    if (!useRegistrationStore.persist.hasHydrated) return;
+  const checkAndHydrate = useCallback(() => {
+    const storedData = useRegistrationStore.getState();
 
     const formFields = Object.keys(
       registrationStudentInfoSchema.shape
@@ -57,7 +57,19 @@ export default function RegistrationStudentInfoForm() {
         setValue(field, value);
       }
     });
-  }, [storedData, setValue]);
+  }, [setValue]);
+
+  useEffect(() => {
+    if (!useRegistrationStore.persist.hasHydrated()) {
+      const unsubscribe = useRegistrationStore.persist.onHydrate(() => {
+        checkAndHydrate();
+      });
+      return unsubscribe;
+    }
+    checkAndHydrate();
+  }, [checkAndHydrate]);
+
+  const router = useRouter();
 
   const documentNumberRegister = register("documentNumber");
 
