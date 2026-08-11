@@ -8,6 +8,7 @@ import { useRegistrationStore } from "@/app/registration/store";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { titleCase } from "title-case";
+import { fetchStudentProfileByDocument } from "@/services/studentService";
 
 const registrationStudentInfoSchema = registrationSchema.pick({
   email: true,
@@ -58,7 +59,7 @@ export default function RegistrationStudentInfoForm() {
     });
   }, [storedData, setValue]);
 
-  const router = useRouter();
+  const documentNumberRegister = register("documentNumber");
 
   const onSubmit = (data: RegistrationStudentInfoSchema) => {
     const formattedData: RegistrationStudentInfoSchema = {
@@ -155,11 +156,27 @@ export default function RegistrationStudentInfoForm() {
                 Número de Documento *
               </label>
               <input
-                {...register("documentNumber")}
+                {...documentNumberRegister}
                 id="documentNumber"
                 type="text"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Número de documento"
+                onBlur={async (e) => {
+                  documentNumberRegister.onBlur(e);
+                  const docNum = e.target.value.trim();
+                  if (docNum) {
+                    try {
+                      const response = await fetchStudentProfileByDocument(docNum);
+                      setData({
+                        isNewStudent: response.isNewStudent,
+                        price: response.price ?? undefined,
+                      });
+                      setValue("isNewStudent", response.isNewStudent);
+                    } catch (error) {
+                      console.error("Error fetching student profile on blur:", error);
+                    }
+                  }
+                }}
               />
               {errors.documentNumber && (
                 <p className="text-sm text-red-600">

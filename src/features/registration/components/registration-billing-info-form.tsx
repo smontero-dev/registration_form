@@ -6,8 +6,10 @@ import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useRegistrationStore } from "@/app/registration/store";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { titleCase } from "title-case";
+import axios from "axios";
+import { addRegistration } from "@/services/registrationService";
 
 const registrationBillingInfoSchema = registrationSchema.pick({
   billingInfo: true,
@@ -19,6 +21,8 @@ type RegistrationBillingInfoSchema = z.infer<
 
 export default function RegistrationBillingInfoForm() {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
@@ -67,8 +71,11 @@ export default function RegistrationBillingInfoForm() {
     router.push("/registration/route-stops");
   };
 
-  const onSubmit = (data: RegistrationBillingInfoSchema) => {
-    const formattedData: RegistrationBillingInfoSchema = {
+  const onSubmit = async (data: RegistrationBillingInfoSchema) => {
+    setIsSubmitting(true);
+    setApiError(null);
+
+    const formattedBillingInfo = {
       billingInfo: {
         address: data.billingInfo.address.trim(),
         documentNumber: data.billingInfo.documentNumber.trim(),
@@ -79,9 +86,67 @@ export default function RegistrationBillingInfoForm() {
         surname: titleCase(data.billingInfo.surname.trim().toLowerCase()),
       },
     };
-    setData(formattedData);
-    reset();
-    router.push("/registration/contract-signing");
+
+    const storedData = useRegistrationStore.getState();
+    const finalData = {
+      ...storedData,
+      ...formattedBillingInfo,
+    };
+
+    try {
+      const response = await addRegistration(finalData);
+      setData({
+        ...formattedBillingInfo,
+        documentNumber: response.documentNumber || finalData.documentNumber,
+        schoolYear: response.schoolYear,
+      });
+      reset();
+
+      const isExistingWithPrice =
+        !finalData.isNewStudent &&
+        Boolean(finalData.price) &&
+        Number(finalData.price) > 0;
+
+      if (isExistingWithPrice) {
+        router.push("/registration/contract-signing");
+      } else {
+        router.push("/registration/office-redirect");
+      }
+    } catch (error) {
+      console.error("Error submitting registration at billing step:", error);
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const responseData = error.response?.data;
+        const serverMessage =
+          typeof responseData === "string"
+            ? responseData
+            : responseData?.message || responseData?.error || "";
+
+        if (
+          status === 400 &&
+          typeof serverMessage === "string" &&
+          serverMessage.startsWith("Form already exists")
+        ) {
+          setApiError(
+            "Ya existe un registro para este estudiante en este año lectivo. Si necesita editar la información, por favor diríjase a la oficina de transporte escolar."
+          );
+        } else if (error.response) {
+          setApiError(
+            "No se pudo completar el registro debido a un problema en el servidor. Por favor, verifique sus datos o intente nuevamente más tarde."
+          );
+        } else {
+          setApiError(
+            "No fue posible conectar con el servidor. Por favor, verifique su conexión a internet e intente nuevamente."
+          );
+        }
+      } else {
+        setApiError(
+          "Ocurrió un error inesperado en la aplicación. Por favor, intente nuevamente."
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -277,19 +342,44 @@ export default function RegistrationBillingInfoForm() {
           </div>
         </div>
       </div>
+      {apiError && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md shadow-sm">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-red-500"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700 font-medium">{apiError}</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between">
         <button
           type="button"
           onClick={onPrevious}
-          className="px-6 py-3 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-50 transition"
+          disabled={isSubmitting}
+          className="px-6 py-3 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-50 transition disabled:opacity-50"
         >
           ← Anterior
         </button>
         <button
           type="submit"
-          className="px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+          disabled={isSubmitting}
+          className="px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition font-medium disabled:bg-gray-400"
         >
-          Siguiente →
+          {isSubmitting ? "Guardando..." : "Siguiente →"}
         </button>
       </div>
     </form>
