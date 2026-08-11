@@ -1,4 +1,4 @@
-// import { RegistrationSchema } from "@/features/registration/schema";
+import { Student } from "@/types";
 import apiClient from "./apiClient";
 
 interface AddRegistrationResponse {
@@ -11,6 +11,15 @@ export const addRegistration = (
   data: unknown
 ): Promise<AddRegistrationResponse> => {
   return apiClient.post("/student-form", data);
+};
+
+export const fetchRegistrationForSigning = (
+  documentNumber: string,
+  schoolYear: string
+): Promise<Student> => {
+  return apiClient.get(
+    `/student-form/student/${documentNumber}/${schoolYear}`
+  );
 };
 
 export const uploadContract = (

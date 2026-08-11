@@ -25,6 +25,11 @@ export type LocationDetail = {
   referencePoints?: string;
 };
 
+export interface StudentProfileResponse {
+  isNewStudent: boolean;
+  price: number | null;
+}
+
 export type Student = {
   id: string;
   name: string;
@@ -43,10 +48,11 @@ export type Student = {
     afternoon?: LocationDetail;
   };
   billingInfo: BillingInfo;
-  price: string;
+  price: string | number | null;
   signatureType: string;
   createdAt: string;
   routes?: RouteAttr[];
+  schoolYear?: string;
 };
 
 export type BillingInfo = {
