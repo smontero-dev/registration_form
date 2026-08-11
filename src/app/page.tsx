@@ -100,7 +100,7 @@ export default function Home() {
               <h1 className="text-3xl font-bold tracking-tight">
                 Sistema de Registro
               </h1>
-              <p className="text-gray-300 text-base mt-2">Año Lectivo 2025-2026</p>
+              <p className="text-gray-300 text-base mt-2">Año Lectivo 2026-2027</p>
             </div>
 
             <div className="p-8 space-y-7">
