@@ -2,7 +2,8 @@
 import apiClient from "./apiClient";
 
 interface AddRegistrationResponse {
-  id: string;
+  documentNumber: string;
+  schoolYear: string;
 }
 
 export const addRegistration = (
@@ -12,13 +13,21 @@ export const addRegistration = (
   return apiClient.post("/student-form", data);
 };
 
-export const uploadContract = (id: string, blob: Blob): Promise<unknown> => {
+export const uploadContract = (
+  documentNumber: string,
+  schoolYear: string,
+  blob: Blob
+): Promise<unknown> => {
   const formData = new FormData();
   formData.append("file", blob);
 
-  return apiClient.post(`/student-form/${id}/contract`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  return apiClient.post(
+    `/student-form/student/${documentNumber}/${schoolYear}/contract`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 };

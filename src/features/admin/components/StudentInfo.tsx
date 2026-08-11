@@ -29,8 +29,8 @@ export default function StudentInfo({
       >
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-3xl font-bold text-gray-800">
-            {titleCase(student.studentName.trim().toLowerCase())}{" "}
-            {titleCase(student.studentSurname.trim().toLowerCase())}
+            {titleCase(student.name.trim().toLowerCase())}{" "}
+            {titleCase(student.surname.trim().toLowerCase())}
           </h2>
           <button
             onClick={closeModal}
@@ -45,12 +45,12 @@ export default function StudentInfo({
           <InfoSection title="Información de Ubicación y Rutas">
             <div
               className={
-                student.location.morning.lat && student.location.afternoon.lat
+                student.locations?.morning?.lat && student.locations?.afternoon?.lat
                   ? "grid grid-cols-1 md:grid-cols-2 gap-8"
                   : "flex justify-center"
               }
             >
-              {student.location.morning.lat && (
+              {student.locations?.morning?.lat && (
                 <div>
                   <h4 className="font-semibold text-lg text-gray-700 mb-2">
                     Ubicación de Mañana
@@ -60,10 +60,12 @@ export default function StudentInfo({
                       (route) => route.period === "morning"
                     )}
                   />
-                  <AddressInfo address={student.streetInfo.morning} />
+                  {student.locations.morning && (
+                    <AddressInfo address={student.locations.morning} />
+                  )}
                 </div>
               )}
-              {student.location.afternoon.lat && (
+              {student.locations?.afternoon?.lat && (
                 <div>
                   <h4 className="font-semibold text-lg text-gray-700 mb-2">
                     Ubicación de Tarde
@@ -73,7 +75,9 @@ export default function StudentInfo({
                       (route) => route.period === "afternoon"
                     )}
                   />
-                  <AddressInfo address={student.streetInfo.afternoon} />
+                  {student.locations.afternoon && (
+                    <AddressInfo address={student.locations.afternoon} />
+                  )}
                 </div>
               )}
             </div>
@@ -184,16 +188,16 @@ const AddressInfo = ({
   address,
 }: {
   address: {
-    mainStreet: string;
+    mainStreet?: string;
     secondaryStreet?: string;
-    neighborhood: string;
+    neighborhood?: string;
     referencePoints?: string;
   };
 }) => (
   <div className="text-sm mt-2">
-    <InfoItem label="Calle Principal" value={address.mainStreet} />
+    <InfoItem label="Calle Principal" value={address.mainStreet ?? ""} />
     <InfoItem label="Calle Secundaria" value={address.secondaryStreet ?? ""} />
-    <InfoItem label="Barrio" value={address.neighborhood} />
+    <InfoItem label="Barrio" value={address.neighborhood ?? ""} />
     <InfoItem label="Referencia" value={address.referencePoints ?? ""} />
   </div>
 );

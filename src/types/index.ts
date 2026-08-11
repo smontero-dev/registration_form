@@ -16,10 +16,19 @@ export type CustomMarkers = {
   } | null;
 };
 
+export type LocationDetail = {
+  lat: number;
+  lng: number;
+  mainStreet: string;
+  secondaryStreet?: string;
+  neighborhood: string;
+  referencePoints?: string;
+};
+
 export type Student = {
   id: string;
-  studentName: string;
-  studentSurname: string;
+  name: string;
+  surname: string;
   documentType: string;
   documentNumber: string;
   grade: string;
@@ -29,26 +38,15 @@ export type Student = {
   housePhone?: string;
   additionalInfo?: string;
   isNewStudent: boolean;
-  streetInfo: {
-    morning: Address;
-    afternoon: Address;
+  locations: {
+    morning?: LocationDetail;
+    afternoon?: LocationDetail;
   };
   billingInfo: BillingInfo;
   price: string;
   signatureType: string;
   createdAt: string;
-  location: {
-    morning: Coordinates;
-    afternoon: Coordinates;
-  };
   routes?: RouteAttr[];
-};
-
-export type Address = {
-  mainStreet: string;
-  secondaryStreet?: string;
-  neighborhood: string;
-  referencePoints?: string;
 };
 
 export type BillingInfo = {
@@ -59,11 +57,6 @@ export type BillingInfo = {
   phone: string;
   email: string;
   address: string;
-};
-
-export type Coordinates = {
-  lat: string;
-  lng: string;
 };
 
 export type RouteAttr = {

@@ -8,11 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegistrationStore } from "@/app/registration/store";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { CustomMarkers } from "@/types";
+import { CustomMarkers, LocationDetail } from "@/types";
 
 const registrationRouteStopsSchema = registrationSchema.pick({
-  location: true,
-  streetInfo: true,
+  locations: true,
 });
 
 type RegistrationRouteStopsSchema = z.infer<
@@ -60,18 +59,14 @@ export default function RegistrationRouteStopsForm() {
   } = useForm<RegistrationRouteStopsSchema>({
     resolver: zodResolver(registrationRouteStopsSchema),
     defaultValues: {
-      location: {
-        morning: undefined,
-        afternoon: undefined,
-      },
-      streetInfo: {
+      locations: {
         morning: undefined,
         afternoon: undefined,
       },
     },
   });
 
-  const location = watch("location");
+  const locations = watch("locations");
 
   const { setData } = useRegistrationStore();
 
@@ -80,7 +75,7 @@ export default function RegistrationRouteStopsForm() {
     if (!storedData.email) {
       router.push("/registration/student-info");
     }
-    if (storedData.location) {
+    if (storedData.locations) {
       const formFields = Object.keys(
         registrationRouteStopsSchema.shape
       ) as (keyof RegistrationRouteStopsSchema)[];
@@ -89,46 +84,46 @@ export default function RegistrationRouteStopsForm() {
         const value = storedData[field];
         if (value !== undefined) {
           setValue(field, value);
-          if (field === "location") {
-            const storedLocation =
-              value as RegistrationRouteStopsSchema["location"];
+          if (field === "locations") {
+            const storedLocations =
+              value as RegistrationRouteStopsSchema["locations"];
             let storedMarkers: CustomMarkers;
             if (
-              storedLocation.morning !== undefined &&
-              storedLocation.afternoon !== undefined &&
-              storedLocation.morning.lat === storedLocation.afternoon.lat &&
-              storedLocation.morning.lng === storedLocation.afternoon.lng
+              storedLocations.morning?.lat !== undefined &&
+              storedLocations.afternoon?.lat !== undefined &&
+              storedLocations.morning.lat === storedLocations.afternoon.lat &&
+              storedLocations.morning.lng === storedLocations.afternoon.lng
             ) {
               setUseSameLocation(true);
               storedMarkers = {
                 morning: {
-                  latlng: storedLocation.morning,
+                  latlng: { lat: storedLocations.morning.lat, lng: storedLocations.morning.lng },
                   color: "#FFC107",
                   popupContent: "Parada de la Mañana",
                 },
                 afternoon: {
-                  latlng: storedLocation.afternoon,
+                  latlng: { lat: storedLocations.afternoon.lat, lng: storedLocations.afternoon.lng },
                   color: "#3B82F6",
                   popupContent: "Parada de la Tarde",
                 },
                 common: {
-                  latlng: storedLocation.morning,
+                  latlng: { lat: storedLocations.morning.lat, lng: storedLocations.morning.lng },
                   color: "#8B5CF6",
                   popupContent: "Parada de la Mañana y Tarde",
                 },
               };
             } else {
               storedMarkers = {
-                morning: storedLocation.morning
+                morning: storedLocations.morning?.lat && storedLocations.morning?.lng
                   ? {
-                    latlng: storedLocation.morning,
+                    latlng: { lat: storedLocations.morning.lat, lng: storedLocations.morning.lng },
                     color: "#FFC107",
                     popupContent: "Parada de la Mañana",
                   }
                   : null,
-                afternoon: storedLocation.afternoon
+                afternoon: storedLocations.afternoon?.lat && storedLocations.afternoon?.lng
                   ? {
-                    latlng: storedLocation.afternoon,
+                    latlng: { lat: storedLocations.afternoon.lat, lng: storedLocations.afternoon.lng },
                     color: "#3B82F6",
                     popupContent: "Parada de la Tarde",
                   }
@@ -154,12 +149,29 @@ export default function RegistrationRouteStopsForm() {
     loadData();
   }, [loadData]);
 
+  const syncAfternoonWithMorning = useCallback(
+    (morningData?: LocationDetail) => {
+      if (!morningData) {
+        setValue("locations.afternoon", undefined);
+        return;
+      }
+      setValue("locations.afternoon.lat", morningData.lat, { shouldValidate: true });
+      setValue("locations.afternoon.lng", morningData.lng, { shouldValidate: true });
+      setValue("locations.afternoon.mainStreet", morningData.mainStreet || "", { shouldValidate: true });
+      setValue("locations.afternoon.secondaryStreet", morningData.secondaryStreet || "", { shouldValidate: true });
+      setValue("locations.afternoon.neighborhood", morningData.neighborhood || "", { shouldValidate: true });
+      setValue("locations.afternoon.referencePoints", morningData.referencePoints || "", { shouldValidate: true });
+    },
+    [setValue]
+  );
+
   useEffect(() => {
     if (useSameLocation) {
-      setValue("location.afternoon", location.morning);
-
-      const morningStreetInfo = watch("streetInfo.morning");
-      setValue("streetInfo.afternoon", morningStreetInfo);
+      if (locations?.morning) {
+        syncAfternoonWithMorning(locations.morning);
+      } else {
+        setValue("locations.afternoon", undefined);
+      }
 
       setMarkers((prev) => ({
         ...prev,
@@ -182,24 +194,27 @@ export default function RegistrationRouteStopsForm() {
         setActiveMarkerType("morning");
       }
     }
-  }, [useSameLocation, location.morning, setValue, activeMarkerType, watch]);
+  }, [useSameLocation, locations?.morning, syncAfternoonWithMorning, activeMarkerType, setValue]);
 
   useEffect(() => {
     const callback = subscribe({
-      name: ["streetInfo.morning"],
+      name: ["locations.morning"],
       callback: ({ values }) => {
         if (useSameLocation) {
-          setValue("streetInfo.afternoon", values.streetInfo.morning);
+          if (values.locations?.morning) {
+            syncAfternoonWithMorning(values.locations.morning);
+          } else {
+            setValue("locations.afternoon", undefined);
+          }
         }
       },
     });
 
     return () => callback();
-  }, [setValue, subscribe, useSameLocation]);
+  }, [subscribe, useSameLocation, syncAfternoonWithMorning, setValue]);
 
   const onUncheckedChange = () => {
-    setValue("location.afternoon", undefined);
-    setValue("streetInfo.afternoon", undefined);
+    setValue("locations.afternoon", undefined);
     setMarkers((prev) => ({
       ...prev,
       afternoon: null,
@@ -212,7 +227,17 @@ export default function RegistrationRouteStopsForm() {
   };
 
   const onSubmit = (data: RegistrationRouteStopsSchema) => {
-    setData(data);
+    const cleanLocations = {
+      morning:
+        data.locations.morning?.lat !== undefined && data.locations.morning?.lng !== undefined
+          ? data.locations.morning
+          : undefined,
+      afternoon:
+        data.locations.afternoon?.lat !== undefined && data.locations.afternoon?.lng !== undefined
+          ? data.locations.afternoon
+          : undefined,
+    };
+    setData({ locations: cleanLocations });
     reset();
     router.push("/registration/billing-info");
   };
@@ -231,9 +256,13 @@ export default function RegistrationRouteStopsForm() {
       ...prev,
       [activeMarkerType]: newMarker,
     }));
-    setValue("location", {
-      ...location,
-      [activeMarkerType]: { lat, lng },
+    setValue("locations", {
+      ...locations,
+      [activeMarkerType]: {
+        ...locations?.[activeMarkerType],
+        lat,
+        lng,
+      },
     });
   };
 
@@ -243,13 +272,11 @@ export default function RegistrationRouteStopsForm() {
       [markerType]: null,
       common: null,
     }));
-    setValue(`location.${markerType}`, undefined);
-    setValue(`streetInfo.${markerType}`, undefined);
+    setValue(`locations.${markerType}`, undefined);
 
     if (useSameLocation) {
       setUseSameLocation(false);
-      setValue("location.afternoon", undefined);
-      setValue("streetInfo.afternoon", undefined);
+      setValue("locations.afternoon", undefined);
       setMarkers((prev) => ({
         ...prev,
         afternoon: null,
@@ -392,9 +419,9 @@ export default function RegistrationRouteStopsForm() {
 
           {/* Map */}
           <Map markers={markers} onMapClick={handleMapClick} />
-          {errors.location && (
+          {errors.locations && (
             <p className="text-sm text-red-600 mt-2">
-              {errors.location.message}
+              {errors.locations.message}
             </p>
           )}
 
@@ -492,17 +519,17 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.morning.mainStreet")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.morning?.mainStreet
+                          {...register("locations.morning.mainStreet")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.locations?.morning?.mainStreet
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
                             }`}
                           placeholder="Ej: Av. 9 de Octubre y Boyacá"
                         />
                       </div>
-                      {errors.streetInfo?.morning?.mainStreet && (
+                      {errors.locations?.morning?.mainStreet && (
                         <p className="mt-1 text-sm text-red-600">
-                          {errors.streetInfo.morning.mainStreet.message}
+                          {errors.locations.morning.mainStreet.message}
                         </p>
                       )}
                     </div>
@@ -523,7 +550,7 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.morning.secondaryStreet")}
+                          {...register("locations.morning.secondaryStreet")}
                           className="block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm"
                           placeholder="Ej: Edificio Torres del Sol, Piso 5, Apto 502"
                         />
@@ -550,17 +577,17 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.morning.neighborhood")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.morning?.neighborhood
+                          {...register("locations.morning.neighborhood")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.locations?.morning?.neighborhood
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
                             }`}
                           placeholder="Ej: Kennedy Norte"
                         />
                       </div>
-                      {errors.streetInfo?.morning?.neighborhood && (
+                      {errors.locations?.morning?.neighborhood && (
                         <p className="mt-1 text-sm text-red-600">
-                          {errors.streetInfo.morning.neighborhood.message}
+                          {errors.locations.morning.neighborhood.message}
                         </p>
                       )}
                     </div>
@@ -585,17 +612,17 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.morning.referencePoints")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.morning?.referencePoints
+                          {...register("locations.morning.referencePoints")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.locations?.morning?.referencePoints
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
                             }`}
                           placeholder="Ej: Cerca del parque Kennedy, frente al Banco Pichincha"
                         />
                       </div>
-                      {errors.streetInfo?.morning?.referencePoints && (
+                      {errors.locations?.morning?.referencePoints && (
                         <p className="mt-1 text-sm text-red-600">
-                          {errors.streetInfo.morning.referencePoints.message}
+                          {errors.locations.morning.referencePoints.message}
                         </p>
                       )}
                     </div>
@@ -698,8 +725,8 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.afternoon.mainStreet")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.afternoon?.mainStreet
+                          {...register("locations.afternoon.mainStreet")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.locations?.afternoon?.mainStreet
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
                             } ${useSameLocation
@@ -710,9 +737,9 @@ export default function RegistrationRouteStopsForm() {
                           placeholder="Ej: Av. 9 de Octubre y Boyacá"
                         />
                       </div>
-                      {errors.streetInfo?.afternoon?.mainStreet && (
+                      {errors.locations?.afternoon?.mainStreet && (
                         <p className="mt-1 text-sm text-red-600">
-                          {errors.streetInfo.afternoon.mainStreet.message}
+                          {errors.locations.afternoon.mainStreet.message}
                         </p>
                       )}
                     </div>
@@ -733,7 +760,7 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.afternoon.secondaryStreet")}
+                          {...register("locations.afternoon.secondaryStreet")}
                           className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${useSameLocation
                               ? "opacity-50 cursor-not-allowed"
                               : ""
@@ -764,8 +791,8 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.afternoon.neighborhood")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.afternoon?.neighborhood
+                          {...register("locations.afternoon.neighborhood")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.locations?.afternoon?.neighborhood
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
                             } ${useSameLocation
@@ -776,9 +803,9 @@ export default function RegistrationRouteStopsForm() {
                           placeholder="Ej: Kennedy Norte"
                         />
                       </div>
-                      {errors.streetInfo?.afternoon?.neighborhood && (
+                      {errors.locations?.afternoon?.neighborhood && (
                         <p className="mt-1 text-sm text-red-600">
-                          {errors.streetInfo.afternoon.neighborhood.message}
+                          {errors.locations.afternoon.neighborhood.message}
                         </p>
                       )}
                     </div>
@@ -803,8 +830,8 @@ export default function RegistrationRouteStopsForm() {
                         </div>
                         <input
                           type="text"
-                          {...register("streetInfo.afternoon.referencePoints")}
-                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.streetInfo?.afternoon?.referencePoints
+                          {...register("locations.afternoon.referencePoints")}
+                          className={`block w-full rounded-md border-gray-300 pl-10 py-2 focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.locations?.afternoon?.referencePoints
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                               : ""
                             } ${useSameLocation
@@ -815,9 +842,9 @@ export default function RegistrationRouteStopsForm() {
                           placeholder="Ej: Cerca del parque Kennedy, frente al Banco Pichincha"
                         />
                       </div>
-                      {errors.streetInfo?.afternoon?.referencePoints && (
+                      {errors.locations?.afternoon?.referencePoints && (
                         <p className="mt-1 text-sm text-red-600">
-                          {errors.streetInfo.afternoon.referencePoints.message}
+                          {errors.locations.afternoon.referencePoints.message}
                         </p>
                       )}
                     </div>

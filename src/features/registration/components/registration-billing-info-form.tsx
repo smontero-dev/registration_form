@@ -37,7 +37,7 @@ export default function RegistrationBillingInfoForm() {
 
     if (!storedData.email) {
       router.push("/registration/student-info");
-    } else if (!storedData.location) {
+    } else if (!storedData.locations) {
       router.push("/registration/route-stops");
     }
 

@@ -16,10 +16,11 @@ import {
   uploadContract,
 } from "@/services/registrationService";
 import SuccessModal from "@/components/ui/SuccessModal";
+import axios from "axios";
 
 const registrationContractSigningSchema = registrationSchema.pick({
   price: true,
-  signature_type: true,
+  signatureType: true,
 });
 
 type RegistrationContractSigningSchema = z.infer<
@@ -35,6 +36,7 @@ export default function RegistrationContractSigningForm() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [filename, setFilename] = useState("");
   const [signedContract, setSignedContract] = useState<Blob | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     handleSubmit,
@@ -46,12 +48,12 @@ export default function RegistrationContractSigningForm() {
   } = useForm<RegistrationContractSigningSchema>({
     resolver: zodResolver(registrationContractSigningSchema),
     defaultValues: {
-      signature_type: null,
+      signatureType: null,
     },
     mode: "onBlur",
   });
 
-  const signatureType = watch("signature_type");
+  const signatureType = watch("signatureType");
   const price = watch("price");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { setData, ...storedData } = useRegistrationStore.getState();
@@ -59,8 +61,8 @@ export default function RegistrationContractSigningForm() {
   const [contractPDF] = usePDF({
     document: (
       <ContractTemplate
-        studentName={storedData.studentName}
-        studentSurname={storedData.studentSurname}
+        name={storedData.name}
+        surname={storedData.surname}
         documentNumber={storedData.documentNumber}
         parentName={storedData.billingInfo?.name}
         parentSurname={storedData.billingInfo?.surname}
@@ -74,7 +76,7 @@ export default function RegistrationContractSigningForm() {
 
     if (!storedData.email) {
       router.push("/registration/student-info");
-    } else if (!storedData.location) {
+    } else if (!storedData.locations) {
       router.push("/registration/route-stops");
     } else if (!storedData.billingInfo) {
       router.push("/registration/billing-info");
@@ -99,6 +101,7 @@ export default function RegistrationContractSigningForm() {
 
   const onSubmit = async (data: RegistrationContractSigningSchema) => {
     setIsSubmitting(true);
+    setApiError(null);
     const finalData = {
       ...storedData,
       ...data,
@@ -106,12 +109,12 @@ export default function RegistrationContractSigningForm() {
 
     try {
       const response = await addRegistration(finalData);
-      const { id } = response;
+      const { documentNumber, schoolYear } = response;
 
       const signedContractPDF = (
         <ContractTemplate
-          studentName={finalData.studentName}
-          studentSurname={finalData.studentSurname}
+          name={finalData.name}
+          surname={finalData.surname}
           documentNumber={finalData.documentNumber}
           parentName={finalData.billingInfo?.name}
           parentSurname={finalData.billingInfo?.surname}
@@ -127,17 +130,47 @@ export default function RegistrationContractSigningForm() {
       }
 
       setSignedContract(contractBlob);
-      const generatedFilename = `${finalData.studentSurname?.replaceAll(
+      const generatedFilename = `${finalData.surname?.replaceAll(
         " ",
         "_"
-      )}_${finalData.studentName?.replaceAll(" ", "_")}_Contrato.pdf`;
+      )}_${finalData.name?.replaceAll(" ", "_")}_Contrato.pdf`;
       setFilename(generatedFilename);
-      await uploadContract(id, contractBlob);
+      await uploadContract(documentNumber, schoolYear, contractBlob);
       setIsModalOpen(true);
       useRegistrationStore.persist.clearStorage();
       reset();
     } catch (error) {
       console.error("Error during registration process:", error);
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const responseData = error.response?.data;
+        const serverMessage =
+          typeof responseData === "string"
+            ? responseData
+            : responseData?.message || responseData?.error || "";
+
+        if (
+          status === 400 &&
+          typeof serverMessage === "string" &&
+          serverMessage.startsWith("Form already exists")
+        ) {
+          setApiError(
+            "Ya existe un registro para este estudiante en este año lectivo. Si necesita editar la información, por favor diríjase a la oficina de transporte escolar."
+          );
+        } else if (error.response) {
+          setApiError(
+            "No se pudo completar el registro debido a un problema en el servidor. Por favor, verifique sus datos o intente nuevamente más tarde."
+          );
+        } else {
+          setApiError(
+            "No fue posible conectar con el servidor. Por favor, verifique su conexión a internet e intente nuevamente."
+          );
+        }
+      } else {
+        setApiError(
+          "Ocurrió un error inesperado en la aplicación. Por favor, intente nuevamente."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -146,7 +179,7 @@ export default function RegistrationContractSigningForm() {
   const handleClearSignature = () => {
     if (signaturePadRef.current) {
       signaturePadRef.current.clear();
-      setValue("signature_type", null, { shouldValidate: true });
+      setValue("signatureType", null, { shouldValidate: true });
       setSignature(undefined);
     }
   };
@@ -158,7 +191,7 @@ export default function RegistrationContractSigningForm() {
         .trim();
       if (signatureData) {
         setSignature(signatureData);
-        setValue("signature_type", "ONLINE_SIGNATURE", {
+        setValue("signatureType", "ONLINE_SIGNATURE", {
           shouldValidate: true,
         });
       }
@@ -365,14 +398,37 @@ export default function RegistrationContractSigningForm() {
                   Limpiar Firma
                 </button>
               </div>
-              {errors.signature_type && (
+              {errors.signatureType && (
                 <p className="text-sm text-red-600 mt-1">
-                  {errors.signature_type.message}
+                  {errors.signatureType.message}
                 </p>
               )}
             </div>
           </div>
         </div>
+        {apiError && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md shadow-sm">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-red-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700 font-medium">{apiError}</p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex justify-between">
           <button
             type="button"

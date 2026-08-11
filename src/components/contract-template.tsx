@@ -68,8 +68,8 @@ const styles = StyleSheet.create({
 });
 
 type RegistrationContractSigningData = {
-  studentName?: string;
-  studentSurname?: string;
+  name?: string;
+  surname?: string;
   documentNumber?: string;
   signature?: string;
   parentName?: string;
@@ -79,8 +79,8 @@ type RegistrationContractSigningData = {
 };
 
 export default function ContractTemplate({
-  studentName,
-  studentSurname,
+  name,
+  surname,
   documentNumber,
   signature,
   parentName,
@@ -104,8 +104,8 @@ export default function ContractTemplate({
             CABEZAS ORLANDO ALONSO portador de la cédula de identidad N.-
             171058989-4, el padre, madre o representante identificados con la
             cedula de ciudadanía que aparece al pie de las firmas, en nombre del
-            alumno {studentSurname || "____________________"}{" "}
-            {studentName || "____________________"}, con cédula{" "}
+            alumno {surname || "____________________"}{" "}
+            {name || "____________________"}, con cédula{" "}
             {documentNumber || "____________________"}, y quienes en lo sucesivo
             se llamaran PADRES DE FAMILIA, hemos celebrado el presente CONTRATO
             DE TRANSPORTE ESCOLAR que se regirá por las siguientes cláusulas:

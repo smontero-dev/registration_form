@@ -15,7 +15,7 @@ export default function AdminPage() {
     select: (data) => {
       return {
         students: data.students.sort((a, b) =>
-          a.studentSurname.trim().localeCompare(b.studentSurname.trim())
+          a.surname.trim().localeCompare(b.surname.trim())
         ),
       };
     },

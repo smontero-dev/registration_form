@@ -30,7 +30,7 @@ export default function StudentsView({
     if (searchTerm.trim()) {
       filtered = filtered.filter((student) => {
         const fullName = removeAccents(
-          `${student.studentName.split(" ").join("")}${student.studentSurname
+          `${student.name.split(" ").join("")}${student.surname
             .split(" ")
             .join("")}`
         ).toLowerCase();
@@ -50,12 +50,12 @@ export default function StudentsView({
     if (viewPeriod === "morning") {
       filtered = filtered.filter(
         (student) =>
-          student.location.morning.lat && student.location.morning.lng
+          student.locations?.morning?.lat && student.locations?.morning?.lng
       );
     } else if (viewPeriod === "afternoon") {
       filtered = filtered.filter(
         (student) =>
-          student.location.afternoon.lat && student.location.afternoon.lng
+          student.locations?.afternoon?.lat && student.locations?.afternoon?.lng
       );
     }
 

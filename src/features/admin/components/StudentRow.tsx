@@ -22,8 +22,8 @@ export default function StudentRow({ student, openModal }: StudentRowProps) {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-gray-800 group-hover:text-blue-800 transition-colors">
-                  {titleCase(student.studentSurname.trim().toLowerCase())},{" "}
-                  {titleCase(student.studentName.trim().toLowerCase())}
+                  {titleCase(student.surname.trim().toLowerCase())},{" "}
+                  {titleCase(student.name.trim().toLowerCase())}
                 </p>
                 {student.isNewStudent && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">

@@ -1,8 +1,8 @@
-import { AuthEventData } from "@aws-amplify/ui";
+import { UseAuthenticator } from "@aws-amplify/ui-react";
 import { useAdminMode } from "@/contexts/AdminModeContext";
 
 type AdminHeaderProps = {
-  signOut: ((data?: AuthEventData | undefined) => void) | undefined;
+  signOut?: UseAuthenticator["signOut"];
 };
 
 export default function AdminHeader({ signOut }: AdminHeaderProps) {

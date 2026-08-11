@@ -11,8 +11,8 @@ import { titleCase } from "title-case";
 
 const registrationStudentInfoSchema = registrationSchema.pick({
   email: true,
-  studentName: true,
-  studentSurname: true,
+  name: true,
+  surname: true,
   documentType: true,
   documentNumber: true,
   grade: true,
@@ -63,8 +63,8 @@ export default function RegistrationStudentInfoForm() {
   const onSubmit = (data: RegistrationStudentInfoSchema) => {
     const formattedData: RegistrationStudentInfoSchema = {
       ...data,
-      studentName: titleCase(data.studentName.trim().toLowerCase()),
-      studentSurname: titleCase(data.studentSurname.trim().toLowerCase()),
+      name: titleCase(data.name.trim().toLowerCase()),
+      surname: titleCase(data.surname.trim().toLowerCase()),
       email: data.email.trim(),
     };
     setData(formattedData);
@@ -80,21 +80,21 @@ export default function RegistrationStudentInfoForm() {
             {/* Student Name */}
             <div className="space-y-2">
               <label
-                htmlFor="studentName"
+                htmlFor="name"
                 className="block text-sm font-medium text-gray-700"
               >
                 Nombres del Estudiante *
               </label>
               <input
-                {...register("studentName")}
-                id="studentName"
+                {...register("name")}
+                id="name"
                 type="text"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Nombre del estudiante"
               />
-              {errors.studentName && (
+              {errors.name && (
                 <p className="text-sm text-red-600">
-                  {errors.studentName.message}
+                  {errors.name.message}
                 </p>
               )}
             </div>
@@ -102,21 +102,21 @@ export default function RegistrationStudentInfoForm() {
             {/* Student Surname */}
             <div className="space-y-2">
               <label
-                htmlFor="studentSurname"
+                htmlFor="surname"
                 className="block text-sm font-medium text-gray-700"
               >
                 Apellidos del Estudiante *
               </label>
               <input
-                {...register("studentSurname")}
-                id="studentSurname"
+                {...register("surname")}
+                id="surname"
                 type="text"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Apellido del estudiante"
               />
-              {errors.studentSurname && (
+              {errors.surname && (
                 <p className="text-sm text-red-600">
-                  {errors.studentSurname.message}
+                  {errors.surname.message}
                 </p>
               )}
             </div>

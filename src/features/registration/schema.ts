@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const registrationSchema = z.object({
   email: z.email("Ingrese un email válido."),
-  studentName: z.string().nonempty("Este es un campo requerido."),
-  studentSurname: z.string().nonempty("Este es un campo requerido."),
+  name: z.string().nonempty("Este es un campo requerido."),
+  surname: z.string().nonempty("Este es un campo requerido."),
   documentType: z.enum(["CÉDULA", "PASAPORTE", "OTRO"], {
     error: "Seleccione un tipo de documento válido.",
   }),
@@ -73,43 +73,32 @@ export const registrationSchema = z.object({
     .optional(),
   additionalInfo: z.string().optional(),
   isNewStudent: z.boolean().optional(),
-  location: z
+  locations: z
     .object({
       morning: z
         .object({
           lat: z.number(),
           lng: z.number(),
+          mainStreet: z.string().nonempty("Este es un campo requerido."),
+          secondaryStreet: z.string().optional(),
+          neighborhood: z.string().nonempty("Este es un campo requerido."),
+          referencePoints: z.string().optional(),
         })
         .optional(),
       afternoon: z
         .object({
           lat: z.number(),
           lng: z.number(),
+          mainStreet: z.string().nonempty("Este es un campo requerido."),
+          secondaryStreet: z.string().optional(),
+          neighborhood: z.string().nonempty("Este es un campo requerido."),
+          referencePoints: z.string().optional(),
         })
         .optional(),
     })
     .refine((data) => data.morning || data.afternoon, {
       message: "Debe seleccionar al menos una ubicación (Mañana o Tarde).",
     }),
-
-  streetInfo: z.object({
-    morning: z
-      .object({
-        mainStreet: z.string().nonempty("Este es un campo requerido."),
-        secondaryStreet: z.string().optional(),
-        neighborhood: z.string().nonempty("Este es un campo requerido."),
-        referencePoints: z.string().optional(),
-      })
-      .optional(),
-    afternoon: z
-      .object({
-        mainStreet: z.string().nonempty("Este es un campo requerido."),
-        secondaryStreet: z.string().optional(),
-        neighborhood: z.string().nonempty("Este es un campo requerido."),
-        referencePoints: z.string().optional(),
-      })
-      .optional(),
-  }),
 
   billingInfo: z.object({
     name: z.string().nonempty("Este es un campo requerido."),
@@ -127,7 +116,7 @@ export const registrationSchema = z.object({
   }),
 
   price: z.number({ error: "Ingrese un número válido." }).optional(),
-  signature_type: z
+  signatureType: z
     .enum(["ONLINE_SIGNATURE", "TO_BE_SIGNED_IN_PERSON"], {
       error:
         "Por favor, firme el contrato o seleccione la opción 'Firmar en oficina'.",

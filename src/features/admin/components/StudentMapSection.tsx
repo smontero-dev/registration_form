@@ -39,7 +39,7 @@ export default function MapSection({
     const content = (
       <strong>
         {titleCase(
-          `${student.studentSurname.trim().toLowerCase()}, ${student.studentName
+          `${student.surname.trim().toLowerCase()}, ${student.name
             .trim()
             .toLowerCase()}`
         )}
@@ -48,17 +48,17 @@ export default function MapSection({
 
     if (
       viewMode === "both" &&
-      student.location.morning.lat &&
-      student.location.morning.lng &&
-      student.location.afternoon.lat &&
-      student.location.afternoon.lng &&
-      student.location.morning.lat === student.location.afternoon.lat &&
-      student.location.morning.lng === student.location.afternoon.lng
+      student.locations?.morning?.lat &&
+      student.locations?.morning?.lng &&
+      student.locations?.afternoon?.lat &&
+      student.locations?.afternoon?.lng &&
+      student.locations.morning.lat === student.locations.afternoon.lat &&
+      student.locations.morning.lng === student.locations.afternoon.lng
     ) {
       acc.push({
         id: student.id,
-        lat: parseFloat(student.location.morning.lat),
-        lng: parseFloat(student.location.morning.lng),
+        lat: Number(student.locations.morning.lat),
+        lng: Number(student.locations.morning.lng),
         color: "purple",
         popupContent: (
           <div className="text-center">
@@ -74,13 +74,13 @@ export default function MapSection({
     // Add morning marker if mode allows it
     if (
       (viewMode === "morning" || viewMode === "both") &&
-      student.location.morning.lat &&
-      student.location.morning.lng
+      student.locations?.morning?.lat &&
+      student.locations?.morning?.lng
     ) {
       acc.push({
         id: `${student.id}-morning`,
-        lat: parseFloat(student.location.morning.lat),
-        lng: parseFloat(student.location.morning.lng),
+        lat: Number(student.locations.morning.lat),
+        lng: Number(student.locations.morning.lng),
         color:
           viewMode === "both"
             ? "purple"
@@ -108,13 +108,13 @@ export default function MapSection({
     // Add afternoon marker if mode allows it
     if (
       (viewMode === "afternoon" || viewMode === "both") &&
-      student.location.afternoon.lat &&
-      student.location.afternoon.lng
+      student.locations?.afternoon?.lat &&
+      student.locations?.afternoon?.lng
     ) {
       acc.push({
         id: `${student.id}-afternoon`,
-        lat: parseFloat(student.location.afternoon.lat),
-        lng: parseFloat(student.location.afternoon.lng),
+        lat: Number(student.locations.afternoon.lat),
+        lng: Number(student.locations.afternoon.lng),
         color:
           viewMode === "both"
             ? "purple"
