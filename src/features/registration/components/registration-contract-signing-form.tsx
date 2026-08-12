@@ -13,9 +13,13 @@ import ContractTemplate from "@/components/contract-template";
 import { pdf, usePDF } from "@react-pdf/renderer";
 import PdfViewer from "@/components/ui/pdf-viewer";
 import SignaturePad from "react-signature-pad-wrapper";
-import { uploadContract } from "@/services/registrationService";
+import {
+  fetchRegistrationForSigning,
+  uploadContract,
+} from "@/services/registrationService";
 import SuccessModal from "@/components/ui/SuccessModal";
 import axios from "axios";
+import { Student } from "@/types";
 
 const registrationContractSigningSchema = registrationSchema.pick({
   signatureType: true,
@@ -25,9 +29,21 @@ type RegistrationContractSigningSchema = z.infer<
   typeof registrationContractSigningSchema
 >;
 
-export default function RegistrationContractSigningForm() {
+interface RegistrationContractSigningFormProps {
+  doc?: string | null;
+  schoolYear?: string | null;
+}
+
+export default function RegistrationContractSigningForm({
+  doc,
+  schoolYear,
+}: RegistrationContractSigningFormProps) {
   const router = useRouter();
   const signaturePadRef = useRef<SignaturePad | null>(null);
+  const [student, setStudent] = useState<Partial<Student> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   const [signature, setSignature] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,26 +67,6 @@ export default function RegistrationContractSigningForm() {
   });
 
   const signatureType = watch("signatureType");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { setData, ...storedData } = useRegistrationStore.getState();
-  const isFinalYear = isFinalYearGrade(storedData.grade);
-  const SelectedContractTemplate = isFinalYear
-    ? FinalYearContractTemplate
-    : ContractTemplate;
-
-  const [contractPDF] = usePDF({
-    document: (
-      <SelectedContractTemplate
-        name={storedData.name}
-        surname={storedData.surname}
-        documentNumber={storedData.documentNumber}
-        parentName={storedData.billingInfo?.name}
-        parentSurname={storedData.billingInfo?.surname}
-        parentDocumentNumber={storedData.billingInfo?.documentNumber}
-        monthlyCost={storedData.price}
-      />
-    ),
-  });
 
   const checkAndRedirect = useCallback(() => {
     const storedData = useRegistrationStore.getState();
@@ -85,45 +81,149 @@ export default function RegistrationContractSigningForm() {
   }, [router]);
 
   useEffect(() => {
-    if (!useRegistrationStore.persist.hasHydrated()) {
-      const unsubscribe = useRegistrationStore.persist.onHydrate(() => {
-        checkAndRedirect();
-      });
+    let isMounted = true;
 
-      return unsubscribe;
+    const initializeData = async () => {
+      setIsLoading(true);
+      setFetchError(null);
+
+      if (!doc || !schoolYear) {
+        if (isMounted) {
+          setFetchError(
+            "Para acceder a la firma del contrato, debe ingresar a través del enlace generado al completar el registro o el enlace proporcionado por la Oficina de Transporte Escolar."
+          );
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const data = await fetchRegistrationForSigning(doc, schoolYear);
+        if (isMounted) {
+          setStudent(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error fetching registration data for signing:", err);
+          if (axios.isAxiosError(err)) {
+            const serverMessage =
+              typeof err.response?.data === "string"
+                ? err.response.data
+                : err.response?.data?.message || err.response?.data?.error;
+            setFetchError(
+              serverMessage ||
+                "No se encontró el registro especificado o la información no está disponible. Por favor, verifique los datos o solicite un nuevo enlace a la Oficina de Transporte."
+            );
+          } else {
+            setFetchError(
+              "No fue posible cargar la información del contrato para su firma."
+            );
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [doc, schoolYear]);
+
+  const isFinalYear = isFinalYearGrade(student?.grade);
+  const SelectedContractTemplate = isFinalYear
+    ? FinalYearContractTemplate
+    : ContractTemplate;
+
+  const [contractPDF, updateContractPDF] = usePDF({
+    document: undefined,
+  });
+
+  useEffect(() => {
+    if (student) {
+      updateContractPDF(
+        <SelectedContractTemplate
+          name={student.name}
+          surname={student.surname}
+          documentNumber={student.documentNumber}
+          parentName={student.billingInfo?.name}
+          parentSurname={student.billingInfo?.surname}
+          parentDocumentNumber={student.billingInfo?.documentNumber}
+          monthlyCost={Number(student.price || 0)}
+        />
+      );
     }
+  }, [student, SelectedContractTemplate, updateContractPDF]);
 
-    checkAndRedirect();
-  }, [checkAndRedirect]);
-
-  const onPrevious = () => {
-    router.push("/registration/billing-info");
+  const handleClearSignature = () => {
+    if (signaturePadRef.current) {
+      signaturePadRef.current.clear();
+      setValue("signatureType", null, { shouldValidate: true });
+      setSignature(undefined);
+    }
   };
 
+  const handleEndSignature = useCallback(() => {
+    if (signaturePadRef.current) {
+      const signatureData = signaturePadRef.current
+        .toDataURL("image/png")
+        .trim();
+      if (signatureData && !signaturePadRef.current.isEmpty()) {
+        setSignature(signatureData);
+        setValue("signatureType", "ONLINE_SIGNATURE", {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+    }
+  }, [setValue]);
+
+  useEffect(() => {
+    const signaturePad = signaturePadRef.current;
+    if (signaturePad && signaturePad.instance) {
+      signaturePad.instance.addEventListener("endStroke", handleEndSignature);
+
+      return () => {
+        if (signaturePad.instance) {
+          signaturePad.instance.removeEventListener(
+            "endStroke",
+            handleEndSignature
+          );
+        }
+      };
+    }
+  }, [handleEndSignature]);
+
   const onSubmit = async () => {
+    if (!student) return;
+
     setIsSubmitting(true);
     setApiError(null);
 
     try {
-      const documentNumber =
-        storedData.documentNumber ||
-        storedData.billingInfo?.documentNumber ||
-        "";
-      const schoolYear = storedData.schoolYear || "2025-2026";
+      const targetDoc = doc || student.documentNumber || "";
+      const targetSchoolYear = schoolYear || student.schoolYear || "";
 
-      if (!documentNumber) {
-        throw new Error("No document number found for registration.");
+      if (!targetDoc || !targetSchoolYear) {
+        throw new Error(
+          "Faltan datos del número de documento o año lectivo para completar el contrato."
+        );
       }
 
       const signedContractPDF = (
         <SelectedContractTemplate
-          name={storedData.name}
-          surname={storedData.surname}
-          documentNumber={storedData.documentNumber}
-          parentName={storedData.billingInfo?.name}
-          parentSurname={storedData.billingInfo?.surname}
-          parentDocumentNumber={storedData.billingInfo?.documentNumber}
-          monthlyCost={storedData.price}
+          name={student.name}
+          surname={student.surname}
+          documentNumber={student.documentNumber}
+          parentName={student.billingInfo?.name}
+          parentSurname={student.billingInfo?.surname}
+          parentDocumentNumber={student.billingInfo?.documentNumber}
+          monthlyCost={Number(student.price || 0)}
           signature={signature}
         />
       );
@@ -134,14 +234,14 @@ export default function RegistrationContractSigningForm() {
       }
 
       setSignedContract(contractBlob);
-      const generatedFilename = `${(storedData.surname || "").replaceAll(
+      const generatedFilename = `${(student.surname || "").replaceAll(
         " ",
         "_"
-      )}_${(storedData.name || "").replaceAll(" ", "_")}_Contrato.pdf`;
+      )}_${(student.name || "").replaceAll(" ", "_")}_Contrato.pdf`;
       setFilename(generatedFilename);
-      await uploadContract(documentNumber, schoolYear, contractBlob);
+
+      await uploadContract(targetDoc, targetSchoolYear, contractBlob);
       setIsModalOpen(true);
-      useRegistrationStore.persist.clearStorage();
       reset();
     } catch (error) {
       console.error("Error during contract upload process:", error);
@@ -164,7 +264,7 @@ export default function RegistrationContractSigningForm() {
         }
       } else {
         setApiError(
-          "Ocurrió un error inesperado en la aplicación. Por favor, intente nuevamente."
+          "Ocurrió un error inesperado al procesar la firma del contrato. Por favor, intente nuevamente."
         );
       }
     } finally {
@@ -172,52 +272,12 @@ export default function RegistrationContractSigningForm() {
     }
   };
 
-  const handleClearSignature = () => {
-    if (signaturePadRef.current) {
-      signaturePadRef.current.clear();
-      setValue("signatureType", null, { shouldValidate: true });
-      setSignature(undefined);
-    }
-  };
-
-  const handleEndSignature = useCallback(() => {
-    if (signaturePadRef.current) {
-      const signatureData = signaturePadRef.current
-        .toDataURL("image/png")
-        .trim();
-      if (signatureData) {
-        setSignature(signatureData);
-        setValue("signatureType", "ONLINE_SIGNATURE", {
-          shouldValidate: true,
-        });
-      }
-    }
-  }, [setValue]);
-
-  // Set up signature pad event listener
-  useEffect(() => {
-    const signaturePad = signaturePadRef.current;
-    if (signaturePad && signaturePad.instance) {
-      signaturePad.instance.addEventListener("endStroke", handleEndSignature);
-
-      // Clean up event listener when component unmounts
-      return () => {
-        if (signaturePad.instance) {
-          signaturePad.instance.removeEventListener(
-            "endStroke",
-            handleEndSignature
-          );
-        }
-      };
-    }
-  }, [handleEndSignature]);
-
-  const handleDownload = (filename: string) => {
+  const handleDownload = (downloadFilename: string) => {
     if (signedContract) {
       setIsDownloading(true);
       const a = document.createElement("a");
       a.href = URL.createObjectURL(signedContract);
-      a.download = filename;
+      a.download = downloadFilename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -231,6 +291,39 @@ export default function RegistrationContractSigningForm() {
     window.location.href = "/";
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500 animate-pulse text-lg">
+          Cargando datos del registro para firma...
+        </p>
+      </div>
+    );
+  }
+
+  if (fetchError || !student) {
+    return (
+      <div className="p-8 max-w-xl mx-auto text-center space-y-6">
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-md text-left shadow-sm space-y-2">
+          <h3 className="text-lg font-bold text-amber-800">
+            Contrato No Disponible para Firma
+          </h3>
+          <p className="text-sm text-amber-700 leading-relaxed">
+            {fetchError || "No se pudo cargar la información del estudiante."}
+          </p>
+        </div>
+        <div className="pt-2">
+          <a
+            href="/"
+            className="inline-block px-6 py-2.5 bg-[#1e213a] text-white font-medium rounded-lg hover:bg-[#2a2d4a] transition-all shadow-sm"
+          >
+            Volver al Inicio
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <form className="p-6" onSubmit={handleSubmit(onSubmit)}>
@@ -240,13 +333,19 @@ export default function RegistrationContractSigningForm() {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Firma del Contrato
               </h3>
+              {student.name && student.surname && (
+                <p className="text-gray-700 font-medium mb-1">
+                  Estudiante: {student.name} {student.surname}{" "}
+                  {student.grade && `(${student.grade})`}
+                </p>
+              )}
               <p className="text-gray-600 mb-6">
                 Por favor, revise el contrato de transporte escolar y fírmelo en
                 el recuadro de abajo para completar el registro.
               </p>
             </div>
 
-            {storedData.isNewStudent && (
+            {student.isNewStudent && (
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md">
                 <div className="flex">
                   <div className="flex-shrink-0">
@@ -281,7 +380,7 @@ export default function RegistrationContractSigningForm() {
 
             {/* Contract Preview Section */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mt-10">
-              <div className="text-center ">
+              <div className="text-center">
                 <h4 className="text-base font-semibold text-gray-800 flex items-center justify-center">
                   <svg
                     className="h-5 w-5 text-blue-600 mr-2"
@@ -329,7 +428,7 @@ export default function RegistrationContractSigningForm() {
                 </span>
               </div>
               <div className="bg-blue-600 text-white font-bold text-lg px-4 py-2 rounded-md shadow-sm whitespace-nowrap">
-                ${Number(storedData.price || 0).toFixed(2)} USD/mes
+                ${Number(student.price || 0).toFixed(2)} USD/mes
               </div>
             </div>
 
@@ -348,7 +447,12 @@ export default function RegistrationContractSigningForm() {
               </label>
               <div className="border-2 border-blue-200 rounded-md bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
                 <SignaturePad
-                  ref={signaturePadRef}
+                  ref={(ref) => {
+                    signaturePadRef.current = ref;
+                    if (ref && ref.instance) {
+                      ref.instance.addEventListener("endStroke", handleEndSignature);
+                    }
+                  }}
                   options={{
                     penColor: "black",
                     backgroundColor: "rgb(255, 255, 255)",
@@ -372,6 +476,7 @@ export default function RegistrationContractSigningForm() {
             </div>
           </div>
         </div>
+
         {apiError && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md shadow-sm">
             <div className="flex items-start">
@@ -395,24 +500,18 @@ export default function RegistrationContractSigningForm() {
             </div>
           </div>
         )}
-        <div className="flex justify-between">
-          <button
-            type="button"
-            onClick={onPrevious}
-            className="px-6 py-3 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-50 transition"
-          >
-            ← Anterior
-          </button>
+
+        <div className="flex justify-end">
           <button
             type="submit"
-            disabled={!signatureType || isSubmitting}
+            disabled={(!signature && !signatureType) || isSubmitting}
             className={`px-8 py-3 rounded-md ${
-              signatureType && !isSubmitting
-                ? "bg-green-600 text-white hover:bg-green-700 transition font-bold"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            } transition font-bold`}
+              (signature || signatureType) && !isSubmitting
+                ? "bg-green-600 text-white hover:bg-green-700 font-bold shadow-md cursor-pointer"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed font-bold"
+            } transition`}
           >
-            {isSubmitting ? "Enviando..." : "Enviar Registro"}
+            {isSubmitting ? "Enviando Firma..." : "Completar y Firmar Contrato"}
           </button>
         </div>
       </form>

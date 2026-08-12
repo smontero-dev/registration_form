@@ -88,12 +88,12 @@ export default function RegistrationBillingInfoForm() {
     };
 
     const storedData = useRegistrationStore.getState();
-    const isExistingWithPrice =
+    const isExistingWithPriceInitial =
       !storedData.isNewStudent &&
       Boolean(storedData.price) &&
       Number(storedData.price) > 0;
 
-    const signatureType = isExistingWithPrice
+    const signatureType = isExistingWithPriceInitial
       ? "ONLINE_SIGNATURE"
       : "TO_BE_SIGNED_IN_PERSON";
 
@@ -105,16 +105,24 @@ export default function RegistrationBillingInfoForm() {
 
     try {
       const response = await addRegistration(finalData);
-      setData({
-        ...formattedBillingInfo,
-        documentNumber: response.documentNumber || finalData.documentNumber,
-        schoolYear: response.schoolYear,
-        signatureType,
-      });
+      const targetDoc = response.documentNumber || finalData.documentNumber || "";
+      const targetSchoolYear = response.schoolYear || finalData.schoolYear || "";
+
+      const isExistingWithPrice =
+        !finalData.isNewStudent &&
+        Boolean(finalData.price) &&
+        Number(finalData.price) > 0;
+
+      // Clear persistent storage immediately after backend persistence
+      useRegistrationStore.persist.clearStorage();
       reset();
 
       if (isExistingWithPrice) {
-        router.push("/registration/contract-signing");
+        router.push(
+          `/registration/contract-signing?doc=${encodeURIComponent(
+            targetDoc
+          )}&schoolYear=${encodeURIComponent(targetSchoolYear)}`
+        );
       } else {
         router.push("/registration/office-redirect");
       }

@@ -64,7 +64,7 @@ export default function OfficeRedirectPage() {
         </p>
         <p>
           <span className="font-medium text-gray-900">Horario:</span> Lunes a Viernes,
-          07:00 - 15:00
+          07:30 - 14:00
         </p>
       </div>
 

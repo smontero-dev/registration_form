@@ -49,7 +49,7 @@ export type Student = {
   };
   billingInfo: BillingInfo;
   price: string | number | null;
-  signatureType: string;
+  signatureType?: string | null;
   createdAt: string;
   routes?: RouteAttr[];
   schoolYear?: string;
