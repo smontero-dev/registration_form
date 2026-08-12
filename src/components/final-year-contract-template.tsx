@@ -20,9 +20,9 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     textAlign: "center",
-    marginBottom: 25,
+    marginBottom: 30,
     fontFamily: "Helvetica-Bold",
     marginTop: 10,
   },
@@ -96,21 +96,21 @@ export default function FinalYearContractTemplate({
     >
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>
-          CONTRATO DE TRANSPORTE ESCOLAR - TERCERO DE BACHILLERATO
+          CONTRATO DE TRANSPORTE ESCOLAR
         </Text>
 
         <View style={styles.section}>
           <Text style={styles.text}>
             Entre la operadora de Transporte Escolar e Institucional
-            TRANSFURGOSTIL C.A., representada legalmente por el Sr. FLORES
-            CABEZAS ORLANDO ALONSO portador de la cédula de identidad N.-
-            171058989-4, el padre, madre o representante identificados con la
+            TRANSFURGOSTIL C.A., representada legalmente por el Sr. Eduardo
+            Alfredo Mera Acevedo, portador de la cédula de identidad N.-
+            170799680-5, el padre, madre o representante identificados con la
             cédula de ciudadanía que aparece al pie de las firmas, en nombre del
-            estudiante de Tercero de Bachillerato {surname || "____________________"}{" "}
+            alumno {surname || "____________________"}{" "}
             {name || "____________________"}, con cédula{" "}
             {documentNumber || "____________________"}, y quienes en lo sucesivo
             se llamarán PADRES DE FAMILIA, hemos celebrado el presente CONTRATO
-            DE TRANSPORTE ESCOLAR - TERCERO DE BACHILLERATO que se regirá por las
+            DE TRANSPORTE ESCOLAR que se regirá por las
             siguientes cláusulas:
           </Text>
         </View>
@@ -119,22 +119,18 @@ export default function FinalYearContractTemplate({
           <Text style={styles.text}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>PRIMERA:</Text> El
             objeto del contrato es la prestación del servicio de Transporte
-            Escolar de Lunes a Viernes de los alumnos graduandos de Tercero de
+            Escolar de Lunes a Viernes de los alumnos de Tercero de
             Bachillerato, desde su domicilio hasta la Unidad Educativa de La
             Inmaculada a fin de asistir a la jornada escolar diaria y puntual
-            durante los Diez (10) meses del año lectivo de graduación.
+            durante el presente año lectivo.
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.text}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>SEGUNDA:</Text> El
-            padre, madre de familia o representante se obliga a pagar la suma
-            correspondiente en Diez (10) cuotas mensuales anticipadas dentro de
-            los Diez (10 primeros) días de cada mes, empezando en
-            Septiembre/2025 y terminando en Junio/2026. Al corresponder al último
-            año de bachillerato, la cancelación total de las cuotas mensuales es
-            requisito para el paz y salvo de graduación.
+            padre, madre de familia o representante <Text style={{ fontFamily: "Helvetica-Bold" }}>se obliga a pagar la suma
+            anual correspondiente en nueve (9) cuotas mensuales anticipadas dentro de los cinco (5) primeros días de cada mes, empezando en Septiembre/2026 y terminando en Mayo/2027</Text>
           </Text>
         </View>
 
@@ -143,9 +139,9 @@ export default function FinalYearContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>TERCERA:</Text> La
             Empresa establecerá la ruta respectiva que deban recorrer los
             vehículos asignados. El transporte recogerá y dejará a los alumnos
-            en la puerta de la casa siempre y cuando sea en vías principales y
+            en la puerta de la casa <Text style={{ textDecoration: "underline" }}>siempre y cuando sea en vías principales y
             estén dentro de la ruta y que no estén ubicados en condominios y
-            pasajes cerrados o de difícil acceso, en este caso se les recogerá y
+            pasajes cerrados o de difícil acceso</Text>, en este caso se les recogerá y
             dejará lo más cercano a su domicilio, para lo cual siempre debe
             haber una persona que los entregue y reciba en la parada.
           </Text>
@@ -153,7 +149,9 @@ export default function FinalYearContractTemplate({
 
         <View style={styles.section}>
           <Text style={styles.text}>
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>
             Por motivos de logística no se realizarán pagos de medio transporte.
+            </Text>
           </Text>
         </View>
 
@@ -162,12 +160,12 @@ export default function FinalYearContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>
               CUARTA: COSTO DEL CONTRATO:
             </Text>{" "}
-            Los servicios pactados mediante el presente contrato, tiene un costo
-            mensual de ${monthlyCost || "____________________"} por el Servicio
+            Los servicios pactados mediante el presente contrato, tiene un costo anual de
+            ${monthlyCost !== undefined ? monthlyCost * 10 : "____________________"} por el Servicio
             de Transporte y que serán cancelados por los PADRES O REPRESENTANTES
-            en 10 cuotas mensuales y de acuerdo a lo estipulado en la cláusula
-            segunda de este mismo instrumento. El retraso en el pago de las
-            cuotas ocasionará la suspensión temporal del servicio.
+            en 9 (nueve) cuotas mensuales y de acuerdo a lo estipulado en la cláusula
+            segunda de este mismo instrumento. <Text style={{ fontFamily: "Helvetica-Bold" }}>El retraso en el pago de las
+            cuotas ocasionará la suspensión temporal del servicio.</Text>
           </Text>
         </View>
       </Page>
@@ -182,8 +180,7 @@ export default function FinalYearContractTemplate({
             oficina de Transportes remitido por el padre, madre de familia o
             representante con quince (15) días de anticipación, indicando la
             nueva dirección, barrio y teléfono y cancelando oportunamente el
-            valor correspondiente. Por tratarse del año de graduación, el servicio
-            culminará con el cierre de actividades académicas del nivel.
+            valor correspondiente.
           </Text>
         </View>
 
@@ -204,20 +201,16 @@ export default function FinalYearContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>SEPTIMA:</Text> Se
             garantiza el cumplimiento de los horarios establecidos y el traslado
             seguro de los alumnos dando cumplimiento a las leyes de tránsito,
-            para lo cual la empresa capacitará a los transportistas con dos
-            seminarios:
+            para lo cual la empresa capacitará a los transportistas con un
+            seminario:
             {"\n"}1) Actualización de la nueva Ley de tránsito.
-            {"\n"}2) Servicio al cliente
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.text}>
-            <Text style={{ fontFamily: "Helvetica-Bold" }}>OCTAVA:</Text> El
-            alumno (a) usuario (a) del transporte debe asumir un comportamiento
-            ejemplar de acuerdo con las normas de uso del Servicio de Transporte
-            y el Reglamento Disciplinario correspondiente a los estudiantes de
-            Tercero de Bachillerato.
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>OCTAVA:</Text> El alumno (a) usuario (a) del 
+            transporte debe asumir un comportamiento de acuerdo con las normas de uso del Servicio de Transporte.
           </Text>
         </View>
 
@@ -225,10 +218,10 @@ export default function FinalYearContractTemplate({
           <Text style={styles.text}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>NOVENA:</Text> El
             padre, madre de familia o representante será el responsable de que
-            el alumno este en la parada o sitio designado de manera puntual y
+            el alumno esté en la parada o sitio designado de manera puntual y
             oportuna (3 MINUTOS ANTES DE LA HORA INDICADA) para abordar el
-            vehículo. En lo posible se debe avisar cuando por enfermedad o
-            actividades solemnes del colegio el alumno no asista.
+            vehículo. En lo posible se debe avisar cuando por enfermedad el
+            alumno no asista al Colegio.
           </Text>
         </View>
 
@@ -262,8 +255,8 @@ export default function FinalYearContractTemplate({
               DECIMA SEGUNDA:
             </Text>{" "}
             El presente contrato tiene una vigencia de diez (10) meses
-            comprendidos entre el uno (1) de Septiembre de 2025 hasta el treinta
-            (30) de Junio de 2026.
+            comprendidos entre el uno (1) de Septiembre de 2026 hasta el treinta
+            (30) de Junio de 2027.
           </Text>
         </View>
 
@@ -296,7 +289,7 @@ export default function FinalYearContractTemplate({
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            PADRE Y/O MADRE Y/O REPRESENTANTE - TERCERO DE BACHILLERATO.
+            PADRE Y/O MADRE Y/O REPRESENTANTE.
           </Text>
           {/* Signature section with image and info */}
           {signature ? (

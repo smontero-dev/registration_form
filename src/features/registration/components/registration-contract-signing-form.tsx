@@ -418,7 +418,7 @@ export default function RegistrationContractSigningForm({
             {contractPDF.url && <PdfViewer file={contractPDF.url} />}
 
             {/* Read-Only Price Summary Badge */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <span className="block text-xs font-semibold uppercase tracking-wider text-blue-700">
                   Tarifa del Servicio Asignada
@@ -430,7 +430,7 @@ export default function RegistrationContractSigningForm({
               <div className="bg-blue-600 text-white font-bold text-lg px-4 py-2 rounded-md shadow-sm whitespace-nowrap">
                 ${Number(student.price || 0).toFixed(2)} USD/mes
               </div>
-            </div>
+            </div> */}
 
             {/* Signature Pad */}
             <div>

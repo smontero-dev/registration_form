@@ -100,15 +100,16 @@ export default function ContractTemplate({
         <View style={styles.section}>
           <Text style={styles.text}>
             Entre la operadora de Transporte Escolar e Institucional
-            TRANSFURGOSTIL C.A., representada legalmente por el Sr. FLORES
-            CABEZAS ORLANDO ALONSO portador de la cédula de identidad N.-
-            171058989-4, el padre, madre o representante identificados con la
-            cedula de ciudadanía que aparece al pie de las firmas, en nombre del
+            TRANSFURGOSTIL C.A., representada legalmente por el Sr. Eduardo
+            Alfredo Mera Acevedo, portador de la cédula de identidad N.-
+            170799680-5, el padre, madre o representante identificados con la
+            cédula de ciudadanía que aparece al pie de las firmas, en nombre del
             alumno {surname || "____________________"}{" "}
             {name || "____________________"}, con cédula{" "}
             {documentNumber || "____________________"}, y quienes en lo sucesivo
-            se llamaran PADRES DE FAMILIA, hemos celebrado el presente CONTRATO
-            DE TRANSPORTE ESCOLAR que se regirá por las siguientes cláusulas:
+            se llamarán PADRES DE FAMILIA, hemos celebrado el presente CONTRATO
+            DE TRANSPORTE ESCOLAR que se regirá por las
+            siguientes cláusulas:
           </Text>
         </View>
 
@@ -126,10 +127,9 @@ export default function ContractTemplate({
         <View style={styles.section}>
           <Text style={styles.text}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>SEGUNDA:</Text> El
-            padre, madre de familia o representante se obliga a pagar la suma
-            correspondiente en Diez (10) cuotas mensuales anticipadas dentro de
-            los Diez (10 primeros) días de cada mes, empezando en
-            Septiembre/2025 y terminando en Junio/2026
+            padre, madre de familia o representante <Text style={{ fontFamily: "Helvetica-Bold" }}>se obliga a pagar la suma
+            correspondiente en Diez (10) cuotas mensuales anticipadas dentro de los cinco (5) primeros días de cada mes, empezando en
+            Septiembre/2026 y terminando en Junio/2027</Text>
           </Text>
         </View>
 
@@ -138,9 +138,9 @@ export default function ContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>TERCERA:</Text> La
             Empresa establecerá la ruta respectiva que deban recorrer los
             vehículos asignados. El transporte recogerá y dejará a los alumnos
-            en la puerta de la casa siempre y cuando sea en vías principales y
+            en la puerta de la casa <Text style={{ textDecoration: "underline" }}>siempre y cuando sea en vías principales y
             estén dentro de la ruta y que no estén ubicados en condominios y
-            pasajes cerrados o de difícil acceso, en este caso se les recogerá y
+            pasajes cerrados o de difícil acceso</Text>, en este caso se les recogerá y
             dejará lo más cercano a su domicilio, para lo cual siempre debe
             haber una persona que los entregue y reciba en la parada.
           </Text>
@@ -148,7 +148,9 @@ export default function ContractTemplate({
 
         <View style={styles.section}>
           <Text style={styles.text}>
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>
             Por motivos de logística no se realizarán pagos de medio transporte.
+            </Text>
           </Text>
         </View>
 
@@ -157,12 +159,12 @@ export default function ContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>
               CUARTA: COSTO DEL CONTRATO:
             </Text>{" "}
-            Los servicios pactados mediante el presente contrato, tiene un costo
-            mensual de ${monthlyCost || "____________________"} por el Servicio
+            Los servicios pactados mediante el presente contrato, tiene un costo anual de
+            ${monthlyCost !== undefined ? monthlyCost * 10 : "____________________"} por el Servicio
             de Transporte y que serán cancelados por los PADRES O REPRESENTANTES
-            en 10 cuotas mensuales y de acuerdo a lo estipulado en la cláusula
-            segunda de este mismo instrumento. El retraso en el pago de las
-            cuotas ocasionara la suspensión temporal del servicio.
+            en 10 (diez) cuotas mensuales y de acuerdo a lo estipulado en la cláusula
+            segunda de este mismo instrumento. <Text style={{ fontFamily: "Helvetica-Bold" }}>El retraso en el pago de las
+            cuotas ocasionará la suspensión temporal del servicio.</Text>
           </Text>
         </View>
       </Page>
@@ -198,18 +200,16 @@ export default function ContractTemplate({
             <Text style={{ fontFamily: "Helvetica-Bold" }}>SEPTIMA:</Text> Se
             garantiza el cumplimiento de los horarios establecidos y el traslado
             seguro de los alumnos dando cumplimiento a las leyes de tránsito,
-            para lo cual la empresa capacitará a los transportistas con dos
-            seminarios:
+            para lo cual la empresa capacitará a los transportistas con un
+            seminario:
             {"\n"}1) Actualización de la nueva Ley de tránsito.
-            {"\n"}2) Servicio al cliente
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.text}>
-            <Text style={{ fontFamily: "Helvetica-Bold" }}>OCTAVA:</Text> El
-            alumno (a) usuario (a) del transporte debe asumir un comportamiento
-            de acuerdo con las normas de uso del Servicio de Transporte.
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>OCTAVA:</Text> El alumno (a) usuario (a) del 
+            transporte debe asumir un comportamiento de acuerdo con las normas de uso del Servicio de Transporte.
           </Text>
         </View>
 
@@ -217,7 +217,7 @@ export default function ContractTemplate({
           <Text style={styles.text}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>NOVENA:</Text> El
             padre, madre de familia o representante será el responsable de que
-            el alumno este en la parada o sitio designado de manera puntual y
+            el alumno esté en la parada o sitio designado de manera puntual y
             oportuna (3 MINUTOS ANTES DE LA HORA INDICADA) para abordar el
             vehículo. En lo posible se debe avisar cuando por enfermedad el
             alumno no asista al Colegio.
@@ -254,8 +254,8 @@ export default function ContractTemplate({
               DECIMA SEGUNDA:
             </Text>{" "}
             El presente contrato tiene una vigencia de diez (10) meses
-            comprendidos entre el uno (1) de Septiembre de 2025 hasta el treinta
-            (30) de Junio de 2026.
+            comprendidos entre el uno (1) de Septiembre de 2026 hasta el treinta
+            (30) de Junio de 2027.
           </Text>
         </View>
 
