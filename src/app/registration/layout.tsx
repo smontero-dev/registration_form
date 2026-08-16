@@ -1,23 +1,41 @@
 "use client";
 
-import { checkAuthStatus } from "@/services/authService";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { checkAuthStatus, validateToken } from "@/services/authService";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
-export default function RegistrationLayout({
+function RegistrationContentGuard({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
     const verifyAccess = async () => {
       try {
+        if (token) {
+          const response = await validateToken(token);
+          if (response.authorized) {
+            const newParams = new URLSearchParams(searchParams.toString());
+            newParams.delete("token");
+            const cleanUrl = newParams.toString()
+              ? `${pathname}?${newParams.toString()}`
+              : pathname;
+            router.replace(cleanUrl, { scroll: false });
+            setIsVerifying(false);
+            return;
+          }
+        }
+
         const { authorized } = await checkAuthStatus();
         if (!authorized) {
           router.replace("/");
+          return;
         }
         setIsVerifying(false);
       } catch (err) {
@@ -27,7 +45,7 @@ export default function RegistrationLayout({
     };
 
     verifyAccess();
-  }, [router]);
+  }, [router, pathname, searchParams, token]);
 
   if (isVerifying) {
     return (
@@ -51,13 +69,29 @@ export default function RegistrationLayout({
             </p>
           </div>
 
-          {/* Progress indicator */}
-          {/* <FormProgress steps={steps} currentStep={currentStep} /> */}
-
           {/* Form */}
           {children}
         </div>
       </div>
-    </div >
+    </div>
   );
 }
+
+export default function RegistrationLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-gray-500 animate-pulse">Verificando acceso...</p>
+        </div>
+      }
+    >
+      <RegistrationContentGuard>{children}</RegistrationContentGuard>
+    </Suspense>
+  );
+}
+
