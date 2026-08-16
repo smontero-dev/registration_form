@@ -56,7 +56,7 @@ export default function MapSection({
       student.locations.morning.lng === student.locations.afternoon.lng
     ) {
       acc.push({
-        id: student.id,
+        id: student.documentNumber,
         lat: Number(student.locations.morning.lat),
         lng: Number(student.locations.morning.lng),
         color: "purple",
@@ -78,7 +78,7 @@ export default function MapSection({
       student.locations?.morning?.lng
     ) {
       acc.push({
-        id: `${student.id}-morning`,
+        id: `${student.documentNumber}-morning`,
         lat: Number(student.locations.morning.lat),
         lng: Number(student.locations.morning.lng),
         color:
@@ -112,7 +112,7 @@ export default function MapSection({
       student.locations?.afternoon?.lng
     ) {
       acc.push({
-        id: `${student.id}-afternoon`,
+        id: `${student.documentNumber}-afternoon`,
         lat: Number(student.locations.afternoon.lat),
         lng: Number(student.locations.afternoon.lng),
         color:

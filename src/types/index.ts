@@ -31,7 +31,6 @@ export interface StudentProfileResponse {
 }
 
 export type Student = {
-  id: string;
   name: string;
   surname: string;
   documentType: string;
