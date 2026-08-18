@@ -21,6 +21,7 @@ interface StudentLocationMapEditorProps {
   morningLocation?: Partial<LocationDetail>;
   afternoonLocation?: Partial<LocationDetail>;
   activePeriod: "morning" | "afternoon";
+  useSameMorningLocation?: boolean;
   onLocationChange: (
     period: "morning" | "afternoon",
     lat: number,
@@ -65,9 +66,11 @@ const createSvgIcon = (color: string, label: string) => {
 
 function MapClickHandler({
   activePeriod,
+  useSameMorningLocation,
   onLocationChange,
 }: {
   activePeriod: "morning" | "afternoon";
+  useSameMorningLocation?: boolean;
   onLocationChange: (
     period: "morning" | "afternoon",
     lat: number,
@@ -76,7 +79,12 @@ function MapClickHandler({
 }) {
   useMapEvents({
     click(e) {
-      onLocationChange(activePeriod, e.latlng.lat, e.latlng.lng);
+      if (useSameMorningLocation) {
+        onLocationChange("morning", e.latlng.lat, e.latlng.lng);
+        onLocationChange("afternoon", e.latlng.lat, e.latlng.lng);
+      } else {
+        onLocationChange(activePeriod, e.latlng.lat, e.latlng.lng);
+      }
     },
   });
   return null;
@@ -129,10 +137,12 @@ function MapControls() {
 
 function RecenterMap({
   activePeriod,
+  useSameMorningLocation,
   morningLocation,
   afternoonLocation,
 }: {
   activePeriod: "morning" | "afternoon";
+  useSameMorningLocation?: boolean;
   morningLocation?: Partial<LocationDetail>;
   afternoonLocation?: Partial<LocationDetail>;
 }) {
@@ -140,18 +150,21 @@ function RecenterMap({
   const lastActiveRef = useRef<string>("");
 
   useEffect(() => {
-    if (lastActiveRef.current === activePeriod) return;
-    lastActiveRef.current = activePeriod;
+    const currentKey = `${activePeriod}-${useSameMorningLocation}`;
+    if (lastActiveRef.current === currentKey) return;
+    lastActiveRef.current = currentKey;
 
     const targetLoc =
-      activePeriod === "morning" ? morningLocation : afternoonLocation;
+      useSameMorningLocation || activePeriod === "morning"
+        ? morningLocation
+        : afternoonLocation;
     const lat = Number(targetLoc?.lat);
     const lng = Number(targetLoc?.lng);
 
     if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
       map.panTo([lat, lng]);
     }
-  }, [activePeriod, morningLocation, afternoonLocation, map]);
+  }, [activePeriod, useSameMorningLocation, morningLocation, afternoonLocation, map]);
 
   return null;
 }
@@ -160,6 +173,7 @@ export default function StudentLocationMapEditor({
   morningLocation,
   afternoonLocation,
   activePeriod,
+  useSameMorningLocation = false,
   onLocationChange,
 }: StudentLocationMapEditorProps) {
   const morningLat = Number(morningLocation?.lat);
@@ -173,15 +187,14 @@ export default function StudentLocationMapEditor({
     !isNaN(afternoonLat) && !isNaN(afternoonLng) && afternoonLat !== 0 && afternoonLng !== 0;
 
   const initialCenter = useMemo<[number, number]>(() => {
-    if (activePeriod === "morning" && hasMorning) return [morningLat, morningLng];
-    if (activePeriod === "afternoon" && hasAfternoon) return [afternoonLat, afternoonLng];
     if (hasMorning) return [morningLat, morningLng];
     if (hasAfternoon) return [afternoonLat, afternoonLng];
     return [-0.1807, -78.4678]; // Default Quito
-  }, [activePeriod, hasMorning, hasAfternoon, morningLat, morningLng, afternoonLat, afternoonLng]);
+  }, [hasMorning, hasAfternoon, morningLat, morningLng, afternoonLat, afternoonLng]);
 
   const morningIcon = useMemo(() => createSvgIcon("#2563EB", "Mañana"), []);
-  const afternoonIcon = useMemo(() => createSvgIcon("#9333EA", "Tarde"), []);
+  const afternoonIcon = useMemo(() => createSvgIcon("#3B82F6", "Tarde"), []);
+  const commonIcon = useMemo(() => createSvgIcon("#8B5CF6", "Mañana y Tarde"), []);
 
   return (
     <div className="relative w-full h-[340px] rounded-lg overflow-hidden border border-gray-300 shadow-inner">
@@ -197,6 +210,7 @@ export default function StudentLocationMapEditor({
 
         <MapClickHandler
           activePeriod={activePeriod}
+          useSameMorningLocation={useSameMorningLocation}
           onLocationChange={onLocationChange}
         />
 
@@ -204,66 +218,99 @@ export default function StudentLocationMapEditor({
 
         <RecenterMap
           activePeriod={activePeriod}
+          useSameMorningLocation={useSameMorningLocation}
           morningLocation={morningLocation}
           afternoonLocation={afternoonLocation}
         />
 
-        {hasMorning && (
-          <Marker
-            position={[morningLat, morningLng]}
-            icon={morningIcon}
-            draggable={activePeriod === "morning"}
-            eventHandlers={{
-              dragend: (e) => {
-                const marker = e.target;
-                const position = marker.getLatLng();
-                onLocationChange("morning", position.lat, position.lng);
-              },
-            }}
-          >
-            <Popup>
-              <div className="text-xs">
-                <strong>Parada Mañana</strong>
-                <br />
-                {morningLocation?.mainStreet || "Sin dirección"}
-                <br />
-                <span className="text-gray-500">
-                  {activePeriod === "morning"
-                    ? "(Arrastra el pin o haz clic en el mapa)"
-                    : "(Activa pestaña Mañana para editar)"}
-                </span>
-              </div>
-            </Popup>
-          </Marker>
-        )}
+        {useSameMorningLocation ? (
+          hasMorning && (
+            <Marker
+              position={[morningLat, morningLng]}
+              icon={commonIcon}
+              draggable={true}
+              eventHandlers={{
+                dragend: (e) => {
+                  const marker = e.target;
+                  const position = marker.getLatLng();
+                  onLocationChange("morning", position.lat, position.lng);
+                  onLocationChange("afternoon", position.lat, position.lng);
+                },
+              }}
+            >
+              <Popup>
+                <div className="text-xs">
+                  <strong>Parada Mañana y Tarde</strong>
+                  <br />
+                  {morningLocation?.mainStreet || "Sin dirección"}
+                  <br />
+                  <span className="text-gray-500">
+                    (Arrastra el pin o haz clic en el mapa para mover ambas paradas)
+                  </span>
+                </div>
+              </Popup>
+            </Marker>
+          )
+        ) : (
+          <>
+            {hasMorning && (
+              <Marker
+                position={[morningLat, morningLng]}
+                icon={morningIcon}
+                draggable={activePeriod === "morning"}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const marker = e.target;
+                    const position = marker.getLatLng();
+                    onLocationChange("morning", position.lat, position.lng);
+                  },
+                }}
+              >
+                <Popup>
+                  <div className="text-xs">
+                    <strong>Parada Mañana</strong>
+                    <br />
+                    {morningLocation?.mainStreet || "Sin dirección"}
+                    <br />
+                    <span className="text-gray-500">
+                      {activePeriod === "morning"
+                        ? "(Arrastra el pin o haz clic en el mapa)"
+                        : "(Activa pestaña Mañana para editar)"}
+                    </span>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
 
-        {hasAfternoon && (
-          <Marker
-            position={[afternoonLat, afternoonLng]}
-            icon={afternoonIcon}
-            draggable={activePeriod === "afternoon"}
-            eventHandlers={{
-              dragend: (e) => {
-                const marker = e.target;
-                const position = marker.getLatLng();
-                onLocationChange("afternoon", position.lat, position.lng);
-              },
-            }}
-          >
-            <Popup>
-              <div className="text-xs">
-                <strong>Parada Tarde</strong>
-                <br />
-                {afternoonLocation?.mainStreet || "Sin dirección"}
-                <br />
-                <span className="text-gray-500">
-                  {activePeriod === "afternoon"
-                    ? "(Arrastra el pin o haz clic en el mapa)"
-                    : "(Activa pestaña Tarde para editar)"}
-                </span>
-              </div>
-            </Popup>
-          </Marker>
+            {hasAfternoon && (
+              <Marker
+                position={[afternoonLat, afternoonLng]}
+                icon={afternoonIcon}
+                draggable={activePeriod === "afternoon"}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const marker = e.target;
+                    const position = marker.getLatLng();
+                    onLocationChange("afternoon", position.lat, position.lng);
+                  },
+                }}
+              >
+                <Popup>
+                  <div className="text-xs">
+                    <strong>Parada Tarde</strong>
+                    <br />
+                    {afternoonLocation?.mainStreet || "Sin dirección"}
+                    <br />
+                    <span className="text-gray-500">
+                      {activePeriod === "afternoon"
+                        ? "(Arrastra el pin o haz clic en el mapa)"
+                        : "(Activa pestaña Tarde para editar)"}
+                    </span>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+          </>
         )}
       </MapContainer>
     </div>

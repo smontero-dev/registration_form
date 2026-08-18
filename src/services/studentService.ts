@@ -63,3 +63,25 @@ export const updateStudent = async (
   );
   return response;
 };
+
+/**
+ * Fetches the presigned S3 download URL for a student's signed contract.
+ * Authenticates with Cognito ID token in Authorization header.
+ * @param documentNumber Document number of the student
+ * @param schoolYear School year period (defaults to 2026-2027)
+ */
+export const getContractDownloadUrl = async (
+  documentNumber: string,
+  schoolYear: string = "2026-2027"
+): Promise<{ downloadUrl: string }> => {
+  const { idToken } = (await fetchAuthSession()).tokens ?? {};
+  const response: { downloadUrl: string } = await apiClient.get(
+    `/students/${documentNumber}/${schoolYear}/contract`,
+    {
+      headers: {
+        Authorization: idToken?.toString() ?? "",
+      },
+    }
+  );
+  return response;
+};

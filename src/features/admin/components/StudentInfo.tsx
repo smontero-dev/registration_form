@@ -5,7 +5,10 @@ import { titleCase } from "title-case";
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateStudent } from "@/services/studentService";
+import {
+  getContractDownloadUrl,
+  updateStudent,
+} from "@/services/studentService";
 import dynamic from "next/dynamic";
 import {
   Copy,
@@ -21,6 +24,9 @@ import {
   Phone,
   Home,
   ShieldAlert,
+  Trash2,
+  Info,
+  Download,
 } from "lucide-react";
 
 const GRADES = [
@@ -109,6 +115,19 @@ export default function StudentInfo({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activeMapTab, setActiveMapTab] = useState<"morning" | "afternoon">("morning");
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [isDownloadingContract, setIsDownloadingContract] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  // Determine if student initially uses same morning location for both stops
+  const isInitiallySameLocation = Boolean(
+    student.locations?.morning?.lat &&
+      student.locations?.afternoon?.lat &&
+      Number(student.locations.morning.lat) === Number(student.locations.afternoon.lat) &&
+      Number(student.locations.morning.lng) === Number(student.locations.afternoon.lng)
+  );
+  const [useSameMorningLocation, setUseSameMorningLocation] = useState(
+    isInitiallySameLocation
+  );
 
   const queryClient = useQueryClient();
 
@@ -131,7 +150,7 @@ export default function StudentInfo({
     watch,
     setValue,
     reset,
-    formState: { errors, isDirty },
+    formState: { errors },
   } = useForm<EditFormValues>({
     defaultValues: {
       name: student.name || "",
@@ -197,27 +216,104 @@ export default function StudentInfo({
     setTimeout(() => setCopiedKey(null), 2500);
   };
 
+  const handleToggleSameMorningLocation = (checked: boolean) => {
+    setUseSameMorningLocation(checked);
+    if (checked) {
+      setActiveMapTab("morning");
+      const morningLoc = watchedLocations?.morning;
+      if (morningLoc) {
+        setValue(
+          "locations.afternoon",
+          { ...morningLoc },
+          { shouldDirty: true, shouldValidate: true }
+        );
+      }
+    } else {
+      setValue("locations.afternoon", undefined, { shouldDirty: true });
+    }
+  };
+
+  const handleRemoveLocation = (period: "morning" | "afternoon") => {
+    if (useSameMorningLocation) {
+      setUseSameMorningLocation(false);
+      setValue(`locations.${period}`, undefined, { shouldDirty: true });
+      if (period === "morning") {
+        setActiveMapTab("afternoon");
+      }
+    } else {
+      setValue(`locations.${period}`, undefined, { shouldDirty: true });
+    }
+  };
+
   const handleLocationCoordChange = (
     period: "morning" | "afternoon",
     lat: number,
     lng: number
   ) => {
-    const currentLoc = watchedLocations?.[period] || {
-      mainStreet: "",
-      neighborhood: "",
-    };
-    setValue(
-      `locations.${period}`,
-      {
-        ...currentLoc,
-        lat,
-        lng,
-      },
-      { shouldDirty: true, shouldValidate: true }
-    );
+    if (useSameMorningLocation) {
+      const morningLoc = watchedLocations?.morning || {
+        mainStreet: "",
+        secondaryStreet: "",
+        neighborhood: "",
+        referencePoints: "",
+      };
+      setValue(
+        "locations.morning",
+        { ...morningLoc, lat, lng },
+        { shouldDirty: true, shouldValidate: true }
+      );
+      setValue(
+        "locations.afternoon",
+        {
+          lat,
+          lng,
+          mainStreet: morningLoc.mainStreet || "",
+          secondaryStreet: morningLoc.secondaryStreet || "",
+          neighborhood: morningLoc.neighborhood || "",
+          referencePoints: morningLoc.referencePoints || "",
+        },
+        { shouldDirty: true, shouldValidate: true }
+      );
+    } else {
+      const currentLoc = watchedLocations?.[period] || {
+        mainStreet: "",
+        secondaryStreet: "",
+        neighborhood: "",
+        referencePoints: "",
+      };
+      setValue(
+        `locations.${period}`,
+        {
+          ...currentLoc,
+          lat,
+          lng,
+        },
+        { shouldDirty: true, shouldValidate: true }
+      );
+    }
+  };
+
+  const handleAddressFieldChange = (
+    period: "morning" | "afternoon",
+    field: "mainStreet" | "secondaryStreet" | "neighborhood" | "referencePoints",
+    value: string
+  ) => {
+    setValue(`locations.${period}.${field}`, value, { shouldDirty: true });
+    if (useSameMorningLocation && period === "morning") {
+      setValue(`locations.afternoon.${field}`, value, { shouldDirty: true });
+    }
   };
 
   const handleStartEditing = () => {
+    const isSame = Boolean(
+      student.locations?.morning?.lat &&
+        student.locations?.afternoon?.lat &&
+        Number(student.locations.morning.lat) === Number(student.locations.afternoon.lat) &&
+        Number(student.locations.morning.lng) === Number(student.locations.afternoon.lng)
+    );
+    setUseSameMorningLocation(isSame);
+    setActiveMapTab("morning");
+
     reset({
       name: student.name || "",
       surname: student.surname || "",
@@ -250,12 +346,14 @@ export default function StudentInfo({
       },
     });
     setMutationError(null);
+    setDownloadError(null);
     setIsEditing(true);
   };
 
   const handleCancelEditing = () => {
     setIsEditing(false);
     setMutationError(null);
+    setDownloadError(null);
   };
 
   const onSubmit = (formData: EditFormValues) => {
@@ -292,7 +390,15 @@ export default function StudentInfo({
               lng: Number(formData.locations.morning.lng),
             }
           : undefined,
-        afternoon: formData.locations?.afternoon?.lat
+        afternoon: useSameMorningLocation
+          ? formData.locations?.morning?.lat
+            ? {
+                ...formData.locations.morning,
+                lat: Number(formData.locations.morning.lat),
+                lng: Number(formData.locations.morning.lng),
+              }
+            : undefined
+          : formData.locations?.afternoon?.lat
           ? {
               ...formData.locations.afternoon,
               lat: Number(formData.locations.afternoon.lat),
@@ -312,9 +418,12 @@ export default function StudentInfo({
       : null;
   const hasValidPrice =
     numericPrice !== null && !isNaN(numericPrice) && numericPrice > 0;
+
+  const isContractSubmitted =
+    student.status === "CONTRACT_SUBMITTED" || Boolean(student.contractKey);
   const isPendingContract =
-    student.status === "PENDING_CONTRACT" ||
-    (!student.contractKey && student.status !== "SIGNED");
+    !isContractSubmitted &&
+    (student.status === "PENDING_CONTRACT" || !student.contractKey);
 
   const signingUrl =
     typeof window !== "undefined"
@@ -322,6 +431,38 @@ export default function StudentInfo({
           student.documentNumber
         )}&schoolYear=${encodeURIComponent(student.schoolYear || "2026-2027")}`
       : "";
+
+  const handleDownloadContract = async () => {
+    try {
+      setIsDownloadingContract(true);
+      setDownloadError(null);
+      const { downloadUrl } = await getContractDownloadUrl(
+        student.documentNumber,
+        student.schoolYear || "2026-2027"
+      );
+      if (downloadUrl) {
+        window.open(downloadUrl, "_blank");
+      }
+    } catch (err: any) {
+      console.error("Error downloading contract:", err);
+      setDownloadError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Error al obtener el enlace de descarga del contrato desde S3."
+      );
+    } finally {
+      setIsDownloadingContract(false);
+    }
+  };
+
+  const hasMorningLoc = Boolean(
+    watchedLocations?.morning?.lat && watchedLocations?.morning?.lng
+  );
+  const hasAfternoonLoc = Boolean(
+    watchedLocations?.afternoon?.lat && watchedLocations?.afternoon?.lng
+  );
+  const currentTabHasLocation =
+    activeMapTab === "morning" ? hasMorningLoc : hasAfternoonLoc;
 
   return (
     <div
@@ -378,7 +519,7 @@ export default function StudentInfo({
 
             <button
               onClick={onCloseModal}
-              className="text-slate-400 hover:text-white p-1 rounded-md transition-colors"
+              className="text-slate-400 hover:text-white p-1 rounded-md transition-colors cursor-pointer"
               aria-label="Cerrar modal"
             >
               <X className="w-6 h-6" />
@@ -392,7 +533,7 @@ export default function StudentInfo({
                 <button
                   type="button"
                   onClick={handleStartEditing}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition shadow-sm cursor-pointer"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                   Editar Información
@@ -401,18 +542,41 @@ export default function StudentInfo({
                 <button
                   type="button"
                   onClick={handleCancelEditing}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                   Cancelar Edición
                 </button>
               )}
 
+              {/* Download Contract button if submitted */}
+              {isContractSubmitted && !isEditing && (
+                <button
+                  type="button"
+                  onClick={handleDownloadContract}
+                  disabled={isDownloadingContract}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {isDownloadingContract ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Descargando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      Descargar Contrato
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Copy Signing link if price is set and pending contract */}
               {hasValidPrice && isPendingContract && !isEditing && (
                 <button
                   type="button"
                   onClick={() => handleCopy(signingUrl, "signing-link")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition shadow-sm cursor-pointer"
                 >
                   {copiedKey === "signing-link" ? (
                     <>
@@ -450,6 +614,16 @@ export default function StudentInfo({
             </div>
           )}
 
+          {downloadError && (
+            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3 text-red-800 text-sm">
+              <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Error al descargar contrato</p>
+                <p className="mt-0.5 text-xs text-red-700">{downloadError}</p>
+              </div>
+            </div>
+          )}
+
           {!isEditing ? (
             /* VIEW MODE */
             <div className="space-y-6">
@@ -477,19 +651,29 @@ export default function StudentInfo({
                   </div>
                 </div>
 
-                <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-                  <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
-                    <FileText className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Estado Contrato
-                    </p>
-                    <p className="text-sm font-bold text-slate-900">
-                      {student.status === "CONTRACT_SUBMITTED"
-                        ? "Contrato Firmado"
-                        : "Pendiente de Firma"}
-                    </p>
+                <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3.5">
+                  <div className="flex items-center gap-3.5">
+                    <div
+                      className={`p-3 rounded-lg ${
+                        isContractSubmitted
+                          ? "bg-emerald-50 text-emerald-600"
+                          : "bg-blue-50 text-blue-600"
+                      }`}
+                    >
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Estado Contrato
+                      </p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {isContractSubmitted
+                          ? "Contrato Enviado"
+                          : student.signatureType === "TO_BE_SIGNED_IN_PERSON"
+                          ? "Firma Presencial"
+                          : "Pendiente de Firma"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -1148,108 +1332,238 @@ export default function StudentInfo({
                   </h3>
 
                   {/* Period Switcher Tabs */}
-                  <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => setActiveMapTab("morning")}
-                      className={`px-3 py-1 rounded-md transition-all ${
-                        activeMapTab === "morning"
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                    >
-                      Editar Parada Mañana
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveMapTab("afternoon")}
-                      className={`px-3 py-1 rounded-md transition-all ${
-                        activeMapTab === "afternoon"
-                          ? "bg-purple-600 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                    >
-                      Editar Parada Tarde
-                    </button>
-                  </div>
+                  {!useSameMorningLocation && (
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setActiveMapTab("morning")}
+                        className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                          activeMapTab === "morning"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Parada Mañana {hasMorningLoc && "✓"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveMapTab("afternoon")}
+                        className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                          activeMapTab === "afternoon"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Parada Tarde {hasAfternoonLoc && "✓"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Same Morning Location Checkbox Toggle */}
+                <div className="flex items-center gap-2.5 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                  <input
+                    type="checkbox"
+                    id="admin-use-same-morning-location"
+                    checked={useSameMorningLocation}
+                    onChange={(e) =>
+                      handleToggleSameMorningLocation(e.target.checked)
+                    }
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+                  />
+                  <label
+                    htmlFor="admin-use-same-morning-location"
+                    className="text-xs font-semibold text-slate-800 cursor-pointer select-none"
+                  >
+                    Usar la ubicación de la mañana para la tarde
+                  </label>
                 </div>
 
                 <p className="text-xs text-slate-500">
-                  Selecciona una parada en las pestañas y haz clic o arrastra el
-                  marcador en el mapa para actualizar las coordenadas GPS.
+                  {useSameMorningLocation
+                    ? "La ubicación de la mañana se aplica automáticamente para la tarde. Al arrastrar o hacer clic en el mapa, ambas paradas se actualizan juntas."
+                    : "Selecciona una parada en las pestañas y haz clic o arrastra el marcador en el mapa para actualizar las coordenadas GPS."}
                 </p>
 
                 {/* Interactive Leaflet Map Component */}
                 <DynamicMapEditor
                   activePeriod={activeMapTab}
+                  useSameMorningLocation={useSameMorningLocation}
                   morningLocation={watchedLocations?.morning}
                   afternoonLocation={watchedLocations?.afternoon}
                   onLocationChange={handleLocationCoordChange}
                 />
 
-                {/* Address Details for active tab */}
+                {/* Address Details & Remove Actions */}
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        activeMapTab === "morning"
-                          ? "bg-blue-600"
-                          : "bg-purple-600"
-                      }`}
-                    ></span>
-                    Dirección de Parada (
-                    {activeMapTab === "morning" ? "Mañana" : "Tarde"})
-                  </h4>
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-1 border-b border-slate-200/60">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          useSameMorningLocation
+                            ? "bg-purple-600"
+                            : activeMapTab === "morning"
+                            ? "bg-blue-600"
+                            : "bg-blue-500"
+                        }`}
+                      ></span>
+                      Dirección de Parada (
+                      {useSameMorningLocation
+                        ? "Mañana y Tarde"
+                        : activeMapTab === "morning"
+                        ? "Mañana"
+                        : "Tarde"}
+                      )
+                    </h4>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="block font-medium text-slate-700 mb-1">
-                        Calle Principal
-                      </label>
-                      <input
-                        {...register(`locations.${activeMapTab}.mainStreet`)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
-                        placeholder="Ej: Av. 10 de Agosto N34-20"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-medium text-slate-700 mb-1">
-                        Calle Secundaria
-                      </label>
-                      <input
-                        {...register(
-                          `locations.${activeMapTab}.secondaryStreet`
-                        )}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
-                        placeholder="Ej: Mariana de Jesús"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-medium text-slate-700 mb-1">
-                        Barrio / Sector
-                      </label>
-                      <input
-                        {...register(`locations.${activeMapTab}.neighborhood`)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
-                        placeholder="Ej: Rumipamba"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-medium text-slate-700 mb-1">
-                        Puntos de Referencia
-                      </label>
-                      <input
-                        {...register(
-                          `locations.${activeMapTab}.referencePoints`
-                        )}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
-                        placeholder="Ej: Edificio Tates, dpto 4"
-                      />
-                    </div>
+                    {/* Removal Action Buttons */}
+                    {useSameMorningLocation ? (
+                      <div className="flex items-center gap-2 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLocation("afternoon")}
+                          className="inline-flex items-center gap-1 text-amber-700 hover:text-red-600 font-semibold cursor-pointer transition"
+                          title="Quita el servicio de la tarde y conserva la parada de la mañana"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Quitar parada de Tarde
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLocation("morning")}
+                          className="inline-flex items-center gap-1 text-amber-700 hover:text-red-600 font-semibold cursor-pointer transition"
+                          title="Quita el servicio de la mañana y conserva la parada de la tarde"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Quitar parada de Mañana
+                        </button>
+                      </div>
+                    ) : (
+                      currentTabHasLocation && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLocation(activeMapTab)}
+                          className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Quitar parada de{" "}
+                          {activeMapTab === "morning" ? "Mañana" : "Tarde"}
+                        </button>
+                      )
+                    )}
                   </div>
+
+                  {!useSameMorningLocation && !currentTabHasLocation ? (
+                    /* Empty stop notification when active period has no coordinates */
+                    <div className="p-4 rounded-lg bg-amber-50/70 border border-amber-200/80 flex items-start gap-2.5 text-amber-800 text-xs">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">
+                          Sin parada de{" "}
+                          {activeMapTab === "morning" ? "Mañana" : "Tarde"}{" "}
+                          asignada
+                        </p>
+                        <p className="text-amber-700 mt-0.5">
+                          Haz clic o busca una dirección en el mapa para
+                          establecer el punto de recogida de este periodo.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="block font-medium text-slate-700 mb-1">
+                          Calle Principal
+                        </label>
+                        <input
+                          value={
+                            useSameMorningLocation
+                              ? watchedLocations?.morning?.mainStreet || ""
+                              : watchedLocations?.[activeMapTab]?.mainStreet || ""
+                          }
+                          onChange={(e) =>
+                            handleAddressFieldChange(
+                              useSameMorningLocation ? "morning" : activeMapTab,
+                              "mainStreet",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                          placeholder="Ej: Av. 10 de Agosto N34-20"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-medium text-slate-700 mb-1">
+                          Calle Secundaria
+                        </label>
+                        <input
+                          value={
+                            useSameMorningLocation
+                              ? watchedLocations?.morning?.secondaryStreet || ""
+                              : watchedLocations?.[activeMapTab]
+                                  ?.secondaryStreet || ""
+                          }
+                          onChange={(e) =>
+                            handleAddressFieldChange(
+                              useSameMorningLocation ? "morning" : activeMapTab,
+                              "secondaryStreet",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                          placeholder="Ej: Mariana de Jesús"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-medium text-slate-700 mb-1">
+                          Barrio / Sector
+                        </label>
+                        <input
+                          value={
+                            useSameMorningLocation
+                              ? watchedLocations?.morning?.neighborhood || ""
+                              : watchedLocations?.[activeMapTab]?.neighborhood ||
+                                ""
+                          }
+                          onChange={(e) =>
+                            handleAddressFieldChange(
+                              useSameMorningLocation ? "morning" : activeMapTab,
+                              "neighborhood",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                          placeholder="Ej: Rumipamba"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-medium text-slate-700 mb-1">
+                          Puntos de Referencia
+                        </label>
+                        <input
+                          value={
+                            useSameMorningLocation
+                              ? watchedLocations?.morning?.referencePoints || ""
+                              : watchedLocations?.[activeMapTab]
+                                  ?.referencePoints || ""
+                          }
+                          onChange={(e) =>
+                            handleAddressFieldChange(
+                              useSameMorningLocation ? "morning" : activeMapTab,
+                              "referencePoints",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                          placeholder="Ej: Edificio Tates, dpto 4"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1274,7 +1588,7 @@ export default function StudentInfo({
           <button
             type="button"
             onClick={onCloseModal}
-            className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
+            className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition cursor-pointer"
           >
             Cerrar
           </button>
@@ -1284,7 +1598,7 @@ export default function StudentInfo({
               <button
                 type="button"
                 onClick={handleCancelEditing}
-                className="px-4 py-2 rounded-lg text-slate-600 text-xs font-medium hover:text-slate-900 transition"
+                className="px-4 py-2 rounded-lg text-slate-600 text-xs font-medium hover:text-slate-900 transition cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1292,7 +1606,7 @@ export default function StudentInfo({
                 type="submit"
                 form="edit-student-form"
                 disabled={updateMutation.isPending}
-                className={`inline-flex items-center gap-2 px-5 py-2 rounded-lg text-white text-xs font-bold transition shadow-sm ${
+                className={`inline-flex items-center gap-2 px-5 py-2 rounded-lg text-white text-xs font-bold transition shadow-sm cursor-pointer ${
                   updateMutation.isPending
                     ? "bg-blue-400 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-500"
@@ -1339,7 +1653,7 @@ const DetailRow = ({
         <button
           type="button"
           onClick={onCopy}
-          className="text-slate-400 hover:text-blue-600 p-0.5 rounded transition"
+          className="text-slate-400 hover:text-blue-600 p-0.5 rounded transition cursor-pointer"
           title="Copiar al portapapeles"
         >
           {copied ? (
@@ -1375,28 +1689,6 @@ const RouteBadge = ({ route }: { route: RouteAttr | undefined }) => {
         style={{ backgroundColor: route.color }}
       ></span>
       {route.name}
-    </span>
-  );
-};
-
-const StatusBadge = ({ status }: { status?: string }) => {
-  if (status === "SIGNED") {
-    return (
-      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-        SIGNED
-      </span>
-    );
-  }
-  if (status === "PENDING_CONTRACT") {
-    return (
-      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-        PENDING_CONTRACT
-      </span>
-    );
-  }
-  return (
-    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-700 text-slate-300 border border-slate-600">
-      {status || "SIN ESTADO"}
     </span>
   );
 };
