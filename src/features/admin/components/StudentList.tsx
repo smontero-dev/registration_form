@@ -127,6 +127,7 @@ export default function StudentList({ students, isLoading }: StudentListProps) {
         <StudentInfo
           student={selectedStudent}
           onCloseModal={() => setSelectedStudent(null)}
+          onStudentUpdated={(updatedStudent) => setSelectedStudent(updatedStudent)}
         />
       )}
     </div>

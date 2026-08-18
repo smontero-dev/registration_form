@@ -40,3 +40,26 @@ export const fetchStudentProfileByDocument = async (
     return { isNewStudent: true, price: null };
   }
 };
+
+/**
+ * Updates an existing student record by sending a PUT request to /students/:originalDocumentNumber.
+ * Authenticates with Cognito ID token in Authorization header.
+ * @param originalDocumentNumber Current document number of the student
+ * @param data Updated student data payload
+ */
+export const updateStudent = async (
+  originalDocumentNumber: string,
+  data: Partial<Student>
+): Promise<Student> => {
+  const { idToken } = (await fetchAuthSession()).tokens ?? {};
+  const response: Student = await apiClient.put(
+    `/students/${originalDocumentNumber}`,
+    data,
+    {
+      headers: {
+        Authorization: idToken?.toString() ?? "",
+      },
+    }
+  );
+  return response;
+};

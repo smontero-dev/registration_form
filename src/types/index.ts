@@ -48,6 +48,8 @@ export type Student = {
   };
   billingInfo: BillingInfo;
   price: string | number | null;
+  status?: string;
+  contractKey?: string | null;
   signatureType?: string | null;
   createdAt: string;
   routes?: RouteAttr[];
