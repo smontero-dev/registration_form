@@ -6,6 +6,7 @@ import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  fetchRegistrationToken,
   getContractDownloadUrl,
   updateStudent,
 } from "@/services/studentService";
@@ -117,6 +118,7 @@ export default function StudentInfo({
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [isDownloadingContract, setIsDownloadingContract] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
   // Determine if student initially uses same morning location for both stops
   const isInitiallySameLocation = Boolean(
@@ -425,20 +427,54 @@ export default function StudentInfo({
     !isContractSubmitted &&
     (student.status === "PENDING_CONTRACT" || !student.contractKey);
 
-  const signingUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/registration/contract-signing?doc=${encodeURIComponent(
-          student.documentNumber
-        )}&schoolYear=${encodeURIComponent(student.schoolYear || "2026-2027")}`
-      : "";
+  const handleCopySigningLink = async () => {
+    if (!student.documentNumber || !student.schoolYear) {
+      setMutationError(
+        "No se puede generar el enlace: número de documento o año lectivo no disponible."
+      );
+      return;
+    }
+
+    try {
+      setIsGeneratingLink(true);
+      setMutationError(null);
+      const token = await fetchRegistrationToken();
+      const origin = window.location.origin;
+      const signingUrl = `${origin}/registration/contract-signing?doc=${encodeURIComponent(
+        student.documentNumber
+      )}&schoolYear=${encodeURIComponent(
+        student.schoolYear
+      )}&token=${encodeURIComponent(token)}`;
+
+      await navigator.clipboard.writeText(signingUrl);
+      setCopiedKey("signing-link");
+      setTimeout(() => setCopiedKey(null), 2500);
+    } catch (err: any) {
+      console.error("Error generating signing link:", err);
+      setMutationError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Error al generar el enlace de firma."
+      );
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
 
   const handleDownloadContract = async () => {
+    if (!student.schoolYear) {
+      setDownloadError(
+        "El estudiante no tiene un año lectivo asignado para descargar el contrato."
+      );
+      return;
+    }
+
     try {
       setIsDownloadingContract(true);
       setDownloadError(null);
       const { downloadUrl } = await getContractDownloadUrl(
         student.documentNumber,
-        student.schoolYear || "2026-2027"
+        student.schoolYear
       );
       if (downloadUrl) {
         window.open(downloadUrl, "_blank");
@@ -490,7 +526,7 @@ export default function StudentInfo({
                 <span>
                   Año Lectivo:{" "}
                   <strong className="text-slate-200">
-                    {student.schoolYear || "2026-2027"}
+                    {student.schoolYear || "N/A"}
                   </strong>
                 </span>
                 <span>•</span>
@@ -571,14 +607,20 @@ export default function StudentInfo({
                 </button>
               )}
 
-              {/* Copy Signing link if price is set and pending contract */}
-              {hasValidPrice && isPendingContract && !isEditing && (
+              {/* Copy Signing link if price is set and contract not submitted */}
+              {!isContractSubmitted && hasValidPrice && !isEditing && (
                 <button
                   type="button"
-                  onClick={() => handleCopy(signingUrl, "signing-link")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition shadow-sm cursor-pointer"
+                  onClick={handleCopySigningLink}
+                  disabled={isGeneratingLink}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition shadow-sm cursor-pointer disabled:opacity-50"
                 >
-                  {copiedKey === "signing-link" ? (
+                  {isGeneratingLink ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Generando enlace...
+                    </>
+                  ) : copiedKey === "signing-link" ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-white" />
                       ¡Enlace Copiado!
@@ -651,29 +693,27 @@ export default function StudentInfo({
                   </div>
                 </div>
 
-                <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3.5">
-                  <div className="flex items-center gap-3.5">
-                    <div
-                      className={`p-3 rounded-lg ${
-                        isContractSubmitted
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-blue-50 text-blue-600"
-                      }`}
-                    >
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Estado Contrato
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {isContractSubmitted
-                          ? "Contrato Enviado"
-                          : student.signatureType === "TO_BE_SIGNED_IN_PERSON"
-                          ? "Firma Presencial"
-                          : "Pendiente de Firma"}
-                      </p>
-                    </div>
+                <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+                  <div
+                    className={`p-3 rounded-lg ${
+                      isContractSubmitted
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-blue-50 text-blue-600"
+                    }`}
+                  >
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Estado Contrato
+                    </p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {isContractSubmitted
+                        ? "Contrato Enviado"
+                        : student.signatureType === "TO_BE_SIGNED_IN_PERSON"
+                        ? "Firma Presencial"
+                        : "Pendiente de Firma"}
+                    </p>
                   </div>
                 </div>
 
@@ -720,7 +760,7 @@ export default function StudentInfo({
                     />
                     <DetailRow
                       label="Año Lectivo"
-                      value={student.schoolYear || "2026-2027"}
+                      value={student.schoolYear || "N/A"}
                     />
                   </div>
                 </div>
@@ -1198,7 +1238,7 @@ export default function StudentInfo({
                         <div>
                           <span className="text-slate-400">Año Lectivo:</span>{" "}
                           <strong className="text-slate-700">
-                            {student.schoolYear || "2026-2027"}
+                            {student.schoolYear || "N/A"}
                           </strong>
                         </div>
                         <div>

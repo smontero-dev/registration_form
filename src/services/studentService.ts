@@ -65,14 +65,28 @@ export const updateStudent = async (
 };
 
 /**
+ * Fetches the active registration token from the auth service.
+ * Authenticates with Cognito ID token in Authorization header.
+ */
+export const fetchRegistrationToken = async (): Promise<string> => {
+  const { idToken } = (await fetchAuthSession()).tokens ?? {};
+  const response: { token: string } = await apiClient.get("/auth/token", {
+    headers: {
+      Authorization: idToken?.toString() ?? "",
+    },
+  });
+  return response.token;
+};
+
+/**
  * Fetches the presigned S3 download URL for a student's signed contract.
  * Authenticates with Cognito ID token in Authorization header.
  * @param documentNumber Document number of the student
- * @param schoolYear School year period (defaults to 2026-2027)
+ * @param schoolYear School year period
  */
 export const getContractDownloadUrl = async (
   documentNumber: string,
-  schoolYear: string = "2026-2027"
+  schoolYear: string
 ): Promise<{ downloadUrl: string }> => {
   const { idToken } = (await fetchAuthSession()).tokens ?? {};
   const response: { downloadUrl: string } = await apiClient.get(
@@ -85,3 +99,4 @@ export const getContractDownloadUrl = async (
   );
   return response;
 };
+
