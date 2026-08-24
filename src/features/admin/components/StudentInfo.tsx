@@ -194,7 +194,7 @@ export default function StudentInfo({
 
   const updateMutation = useMutation({
     mutationFn: (data: Partial<Student>) =>
-      updateStudent(student.documentNumber, data),
+      updateStudent(student.documentNumber, student.schoolYear || "", data),
     onSuccess: (updatedStudent) => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       onStudentUpdated?.(updatedStudent);
@@ -408,6 +408,8 @@ export default function StudentInfo({
             }
           : undefined,
       },
+      signatureType: student.signatureType || "TO_BE_SIGNED_IN_PERSON",
+      schoolYear: student.schoolYear,
     };
 
     updateMutation.mutate(payload);
