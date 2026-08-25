@@ -9,6 +9,8 @@ type FiltersSectionProps = {
   setShowNewStudentsOnly: (value: boolean) => void;
   showNoPriceOnly: boolean;
   setShowNoPriceOnly: (value: boolean) => void;
+  showUnsignedContractsOnly: boolean;
+  setShowUnsignedContractsOnly: (value: boolean) => void;
 };
 
 export default function FiltersSection({
@@ -18,6 +20,8 @@ export default function FiltersSection({
   setShowNewStudentsOnly,
   showNoPriceOnly,
   setShowNoPriceOnly,
+  showUnsignedContractsOnly,
+  setShowUnsignedContractsOnly,
 }: FiltersSectionProps) {
   return (
     <>
@@ -60,8 +64,27 @@ export default function FiltersSection({
             </label>
           </div>
 
+          <div className="flex items-center">
+            <input
+              id="unsigned-contracts-filter"
+              type="checkbox"
+              checked={showUnsignedContractsOnly}
+              onChange={(e) => setShowUnsignedContractsOnly(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="unsigned-contracts-filter"
+              className="ml-2 block text-sm text-gray-700 font-medium"
+            >
+              Contratos sin firmar
+            </label>
+          </div>
+
           {/* Filter Status Indicator */}
-          {(showNewStudentsOnly || showNoPriceOnly || searchTerm) && (
+          {(showNewStudentsOnly ||
+            showNoPriceOnly ||
+            showUnsignedContractsOnly ||
+            searchTerm) && (
             <div className="flex items-center space-x-2 text-xs">
               <span className="text-gray-500">Filtros activos:</span>
               {searchTerm && (
@@ -79,11 +102,17 @@ export default function FiltersSection({
                   Sin precio
                 </span>
               )}
+              {showUnsignedContractsOnly && (
+                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">
+                  Sin contrato
+                </span>
+              )}
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setShowNewStudentsOnly(false);
                   setShowNoPriceOnly(false);
+                  setShowUnsignedContractsOnly(false);
                 }}
                 className="text-gray-400 hover:text-gray-600 underline"
               >

@@ -18,6 +18,8 @@ export default function StudentsView({
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewStudentsOnly, setShowNewStudentsOnly] = useState(false);
   const [showNoPriceOnly, setShowNoPriceOnly] = useState(false);
+  const [showUnsignedContractsOnly, setShowUnsignedContractsOnly] =
+    useState(false);
   const [viewPeriod, setViewPeriod] = useState<
     "morning" | "both" | "afternoon"
   >("both");
@@ -62,6 +64,16 @@ export default function StudentsView({
       });
     }
 
+    // Filter by unsigned contracts only
+    if (showUnsignedContractsOnly) {
+      filtered = filtered.filter((student) => {
+        const isContractSubmitted =
+          student.status === "CONTRACT_SUBMITTED" ||
+          Boolean(student.contractKey);
+        return !isContractSubmitted;
+      });
+    }
+
     // Filter by view mode
     if (viewPeriod === "morning") {
       filtered = filtered.filter(
@@ -76,7 +88,14 @@ export default function StudentsView({
     }
 
     return filtered;
-  }, [students, searchTerm, showNewStudentsOnly, showNoPriceOnly, viewPeriod]);
+  }, [
+    students,
+    searchTerm,
+    showNewStudentsOnly,
+    showNoPriceOnly,
+    showUnsignedContractsOnly,
+    viewPeriod,
+  ]);
 
   return (
     <div className="h-full flex">
@@ -95,6 +114,8 @@ export default function StudentsView({
           setShowNewStudentsOnly={setShowNewStudentsOnly}
           showNoPriceOnly={showNoPriceOnly}
           setShowNoPriceOnly={setShowNoPriceOnly}
+          showUnsignedContractsOnly={showUnsignedContractsOnly}
+          setShowUnsignedContractsOnly={setShowUnsignedContractsOnly}
         />
         <div className="flex-1 overflow-y-auto">
           <StudentListHeader students={filteredStudents} />
