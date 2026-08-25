@@ -7,6 +7,8 @@ type FiltersSectionProps = {
   setSearchTerm: (term: string) => void;
   showNewStudentsOnly: boolean;
   setShowNewStudentsOnly: (value: boolean) => void;
+  showNoPriceOnly: boolean;
+  setShowNoPriceOnly: (value: boolean) => void;
 };
 
 export default function FiltersSection({
@@ -14,6 +16,8 @@ export default function FiltersSection({
   setSearchTerm,
   showNewStudentsOnly,
   setShowNewStudentsOnly,
+  showNoPriceOnly,
+  setShowNoPriceOnly,
 }: FiltersSectionProps) {
   return (
     <>
@@ -23,7 +27,7 @@ export default function FiltersSection({
         placeholder="Buscar estudiantes..."
       />
       <div className="p-4 border-b bg-gray-50/70">
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center">
             <input
               id="new-students-filter"
@@ -40,8 +44,24 @@ export default function FiltersSection({
             </label>
           </div>
 
+          <div className="flex items-center">
+            <input
+              id="no-price-filter"
+              type="checkbox"
+              checked={showNoPriceOnly}
+              onChange={(e) => setShowNoPriceOnly(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="no-price-filter"
+              className="ml-2 block text-sm text-gray-700 font-medium"
+            >
+              Sin precio asignado
+            </label>
+          </div>
+
           {/* Filter Status Indicator */}
-          {(showNewStudentsOnly || searchTerm) && (
+          {(showNewStudentsOnly || showNoPriceOnly || searchTerm) && (
             <div className="flex items-center space-x-2 text-xs">
               <span className="text-gray-500">Filtros activos:</span>
               {searchTerm && (
@@ -54,10 +74,16 @@ export default function FiltersSection({
                   Solo nuevos
                 </span>
               )}
+              {showNoPriceOnly && (
+                <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full">
+                  Sin precio
+                </span>
+              )}
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setShowNewStudentsOnly(false);
+                  setShowNoPriceOnly(false);
                 }}
                 className="text-gray-400 hover:text-gray-600 underline"
               >

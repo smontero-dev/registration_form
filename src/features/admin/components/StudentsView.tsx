@@ -17,6 +17,7 @@ export default function StudentsView({
 }: StudentsViewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewStudentsOnly, setShowNewStudentsOnly] = useState(false);
+  const [showNoPriceOnly, setShowNoPriceOnly] = useState(false);
   const [viewPeriod, setViewPeriod] = useState<
     "morning" | "both" | "afternoon"
   >("both");
@@ -46,6 +47,21 @@ export default function StudentsView({
       filtered = filtered.filter((student) => student.isNewStudent);
     }
 
+    // Filter by registrations without a set price
+    if (showNoPriceOnly) {
+      filtered = filtered.filter((student) => {
+        const numericPrice =
+          student.price !== null &&
+          student.price !== undefined &&
+          student.price !== ""
+            ? Number(student.price)
+            : null;
+        return (
+          numericPrice === null || isNaN(numericPrice) || numericPrice <= 0
+        );
+      });
+    }
+
     // Filter by view mode
     if (viewPeriod === "morning") {
       filtered = filtered.filter(
@@ -60,7 +76,7 @@ export default function StudentsView({
     }
 
     return filtered;
-  }, [students, searchTerm, showNewStudentsOnly, viewPeriod]);
+  }, [students, searchTerm, showNewStudentsOnly, showNoPriceOnly, viewPeriod]);
 
   return (
     <div className="h-full flex">
@@ -77,6 +93,8 @@ export default function StudentsView({
           setSearchTerm={setSearchTerm}
           showNewStudentsOnly={showNewStudentsOnly}
           setShowNewStudentsOnly={setShowNewStudentsOnly}
+          showNoPriceOnly={showNoPriceOnly}
+          setShowNoPriceOnly={setShowNoPriceOnly}
         />
         <div className="flex-1 overflow-y-auto">
           <StudentListHeader students={filteredStudents} />
